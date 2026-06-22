@@ -100,7 +100,7 @@ export default function Home() {
   const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-gray-950 text-white min-h-screen">
+    <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white min-h-screen" style={{ backgroundImage: "radial-gradient(circle at 50% -50%, rgba(245,197,66,0.05) 0%, transparent 50%)" }}>
       {/* NAV */}
       <nav className="sticky top-0 bg-gray-950/95 border-b border-gray-800 p-4">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -143,7 +143,7 @@ export default function Home() {
         <h3 className="text-3xl font-bold mb-8 text-center">Предмети</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {SUBJECTS.map((s, i) => (
-            <div key={i} className="bg-gray-900 p-4 rounded-lg border border-gray-800 hover:border-yellow-500 transition text-center">
+            <div key={i} className="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-lg border border-gray-700 hover:border-yellow-500 text-center" style={{ background: `linear-gradient(135deg, rgba(55,65,81,0.5), rgba(31,41,55,0.5))` }}>
               <div className="text-4xl mb-2">{s.icon}</div>
               <h4 className="font-bold mb-2">{s.name}</h4>
               <p className="text-gray-400 text-sm">{s.tests} тестів</p>
@@ -158,10 +158,10 @@ export default function Home() {
           <h3 className="text-3xl font-bold mb-8 text-center">Викладачі</h3>
           <div className="grid md:grid-cols-2 gap-6">
             {TEACHERS.map((t, i) => (
-              <div key={i} className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <div key={i} className="bg-gradient-to-br from-gray-800 to-gray-700 p-4 rounded-lg border border-gray-600">
                 <h4 className="text-lg font-bold">{t.name}</h4>
                 <p className="text-yellow-500 text-sm mb-2">{t.subject}</p>
-                <p className="text-gray-400 text-sm">{t.exp} • {t.students}+ учнів • ⭐ {t.rating}</p>
+                <p className="text-gray-300 text-sm">{t.exp} • {t.students}+ учнів • ⭐ {t.rating}</p>
               </div>
             ))}
           </div>
@@ -173,9 +173,9 @@ export default function Home() {
         <h3 className="text-3xl font-bold mb-8 text-center">Відгуки</h3>
         <div className="grid md:grid-cols-2 gap-6">
           {TESTIMONIALS.map((t, i) => (
-            <div key={i} className="bg-gray-900 p-4 rounded-lg border border-gray-800">
-              <p className="text-gray-300 mb-3">{ICONS.quote} {t.text}</p>
-              <p className="font-bold">{t.name} — {t.score} балів ⭐</p>
+            <div key={i} className="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-200 mb-3">{ICONS.quote} {t.text}</p>
+              <p className="font-bold text-yellow-400">{t.name} — {t.score} балів ⭐</p>
             </div>
           ))}
         </div>
@@ -187,7 +187,7 @@ export default function Home() {
           <h3 className="text-3xl font-bold mb-8 text-center">Тарифи</h3>
           <div className="grid md:grid-cols-3 gap-6">
             {PLANS.map((p, i) => (
-              <div key={i} className={`p-6 rounded-lg border transition ${p.popular ? "border-yellow-500 bg-yellow-500/10" : "border-gray-700 bg-gray-900"}`}>
+              <div key={i} className={`p-6 rounded-lg border ${p.popular ? "border-yellow-500 bg-gradient-to-br from-yellow-500/20 to-yellow-500/5" : "border-gray-700 bg-gradient-to-br from-gray-900 to-gray-800"}`}>
                 {p.popular && <div className="text-yellow-500 text-sm font-bold mb-2">ПОПУЛЯРНО</div>}
                 <h4 className="text-2xl font-bold mb-2">{p.name}</h4>
                 <div className="text-3xl font-bold text-yellow-500 mb-4">{p.price} ₴</div>
