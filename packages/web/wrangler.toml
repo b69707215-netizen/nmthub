@@ -1,0 +1,13 @@
+name = "nmthub"
+type = "javascript"
+account_id = ""
+workers_dev = true
+
+[site]
+bucket = "./dist"
+include = ["*.html", "*.js", "*.css", "*.json", "*.woff", "*.woff2"]
+exclude = ["*.map"]
+
+[build]
+command = "bunx vite build"
+cwd = "."
