@@ -18,6 +18,18 @@ export default defineConfig(({ mode }) => {
 				"@": path.resolve(__dirname, "./src/web"),
 			},
 		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						vendor: ['react', 'react-dom', 'lucide-react'],
+						ui: ['react-hook-form', 'zod'],
+					}
+				}
+			},
+			chunkSizeWarningLimit: 600,
+			minify: 'terser'
+		},
 		server: {
 			allowedHosts: true,
 			hmr: { overlay: false, },
