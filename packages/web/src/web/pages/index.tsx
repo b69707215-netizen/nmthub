@@ -282,7 +282,7 @@ export default function Index() {
         <div className="container-x" style={{ position: "relative", zIndex: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 56, alignItems: "center" }} className="hero-grid">
             <div style={{ textAlign: "center" }} className="hero-text">
-              <div className="section-badge fade-up stagger-1" style={{ marginBottom: 24 }}><Zap size={12} /> Підготовка до НМТ 2025</div>
+              <div className="section-badge fade-up stagger-1" style={{ marginBottom: 24 }}><Zap size={12} /> Підготовка до НМТ</div>
               <h1 className="font-display h-hero fade-up stagger-2" style={{ fontWeight: 800, marginBottom: 24 }}>
                 Здай НМТ<br /><span className="gold-shimmer">на максимум</span>
               </h1>
@@ -508,7 +508,7 @@ export default function Index() {
               <div style={{ width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, background: "linear-gradient(135deg,#ffe082,#f5c542,#d4a017)" }}>N</div>
               <span className="font-display" style={{ fontWeight: 700 }}>NMT<span className="gradient-text">Hub</span></span>
             </div>
-            <p style={{ fontSize: 12, color: "#555570" }}>© 2025 NMTHub. Всі права захищені. Підготовка до НМТ онлайн.</p>
+            <p style={{ fontSize: 12, color: "#555570" }}>© 2026 NMTHub. Всі права захищені. Підготовка до НМТ онлайн.</p>
             <div style={{ display: "flex", gap: 24 }}>
               {["Умови", "Конфіденційність", "Підтримка"].map((l) => <span key={l} className="nav-link" style={{ fontSize: 12 }}>{l}</span>)}
             </div>
