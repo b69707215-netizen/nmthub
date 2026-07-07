@@ -18,67 +18,58 @@
 .delay-2 { animation-delay: 0.24s; }
 .pulse-score { animation: pulseScore 2.8s ease-in-out infinite; }
 
-.hero-text > p {
-  display: none !important;
+.interactive-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
 }
 
-.hero-actions .primary {
-  font-size: 0 !important;
+.interactive-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(245, 197, 66, 0.2), transparent 38%);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
 }
 
-.hero-actions .primary::after {
-  content: "Пройти тест";
-  font-size: 1rem;
+.interactive-card:hover,
+.active-subject {
+  transform: translateY(-6px);
+  border-color: rgba(245, 197, 66, 0.48) !important;
+  background: linear-gradient(180deg, rgba(245, 197, 66, 0.13), rgba(255, 255, 255, 0.07)) !important;
+  box-shadow: 0 28px 90px rgba(245, 197, 66, 0.14);
 }
 
-.nav button:nth-child(3) {
-  font-size: 0 !important;
-}
+.interactive-card:hover::after,
+.active-subject::after { opacity: 1; }
 
-.nav button:nth-child(3)::after {
-  content: "Тест";
-  font-size: 1rem;
-}
-
-.tests-section .section-head .label {
-  font-size: 0 !important;
-}
-
-.tests-section .section-head .label svg {
-  width: 16px;
-  height: 16px;
-}
-
-.tests-section .section-head .label::after {
-  content: "Тест";
-  font-size: .82rem;
-}
-
-.hero-card > p,
-.hero-card .card-list {
-  display: none !important;
-}
-
-.hero-card::after {
-  content: "Здати НМТ на 200 з NMTHub — це можливо. Залиште заявку, і ми з вами зв’яжемося.";
-  display: block;
+.subject button {
   margin-top: 18px;
-  max-width: 420px;
-  color: var(--muted);
-  font-size: 1.08rem;
-  line-height: 1.7;
+  min-height: 42px;
+  border: 1px solid rgba(245, 197, 66, 0.28);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: rgba(245, 197, 66, 0.1);
+  color: var(--gold-light);
+  font-weight: 900;
 }
 
-.interactive-card { position: relative; overflow: hidden; transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease; }
-.interactive-card::after { content: ""; position: absolute; inset: -1px; opacity: 0; background: radial-gradient(circle at 50% 0%, rgba(245, 197, 66, 0.2), transparent 38%); transition: opacity 0.25s ease; pointer-events: none; }
-.interactive-card:hover, .active-subject { transform: translateY(-6px); border-color: rgba(245, 197, 66, 0.48) !important; background: linear-gradient(180deg, rgba(245, 197, 66, 0.13), rgba(255, 255, 255, 0.07)) !important; box-shadow: 0 28px 90px rgba(245, 197, 66, 0.14); }
-.interactive-card:hover::after, .active-subject::after { opacity: 1; }
-
-.subject button { margin-top: 18px; min-height: 42px; border: 1px solid rgba(245, 197, 66, 0.28); border-radius: 14px; padding: 10px 14px; background: rgba(245, 197, 66, 0.1); color: var(--gold-light); font-weight: 900; }
 .tests-section { position: relative; }
-
 .quiz-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
-.quiz-card { display: flex; flex-direction: column; gap: 16px; min-height: 255px; border: 1px solid var(--line); border-radius: 26px; padding: 20px; background: rgba(255, 255, 255, 0.065); box-shadow: 0 26px 90px rgba(0, 0, 0, 0.22); transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease; }
+.quiz-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 255px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.065);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.22);
+  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
 .quiz-card:hover { transform: translateY(-5px); border-color: rgba(245, 197, 66, 0.32); }
 .quiz-card.correct { border-color: rgba(73, 255, 157, 0.42); background: linear-gradient(180deg, rgba(73, 255, 157, 0.12), rgba(255, 255, 255, 0.055)); }
 .quiz-card.wrong { border-color: rgba(255, 91, 91, 0.36); background: linear-gradient(180deg, rgba(255, 91, 91, 0.09), rgba(255, 255, 255, 0.055)); }
@@ -111,6 +102,7 @@
 .price strong { text-shadow: 0 0 28px rgba(245, 197, 66, 0.35); }
 .form button:disabled { opacity: 0.7; cursor: wait; }
 .contact-link { display: none !important; }
+.review-author { display: block; margin-top: 18px; color: var(--gold-light); font-weight: 900; }
 
 @keyframes revealUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes floatIn { from { opacity: 0; transform: translateY(-16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
