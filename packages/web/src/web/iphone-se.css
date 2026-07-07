@@ -1,0 +1,137 @@
+/* iPhone SE and very small phones polish */
+@supports (-webkit-touch-callout: none) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-width: 320px;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 430px) {
+  .container-x {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  nav .container-x {
+    height: 58px !important;
+  }
+
+  section {
+    padding-top: 64px !important;
+    padding-bottom: 56px !important;
+  }
+
+  .h-hero {
+    font-size: clamp(2.15rem, 12vw, 2.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+
+  .h-section {
+    font-size: clamp(1.55rem, 9vw, 2.15rem);
+  }
+
+  .section-badge {
+    max-width: 100%;
+    white-space: normal;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.68rem;
+    padding: 6px 12px;
+  }
+
+  .hero-cta,
+  .cta-inner {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .btn-primary,
+  .btn-outline {
+    width: 100%;
+    min-height: 48px;
+    padding: 13px 16px;
+    touch-action: manipulation;
+  }
+
+  .hero-proof {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .grid-subjects,
+  .grid-stats,
+  .tests-grid,
+  .grid-teachers,
+  .grid-pricing,
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .orb {
+    filter: blur(52px);
+    opacity: 0.75;
+  }
+
+  .form-input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 375px) {
+  .container-x {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .h-hero {
+    font-size: 2.25rem;
+  }
+
+  .hero-proof {
+    transform: scale(0.95);
+    transform-origin: top center;
+  }
+
+  .grid-subjects,
+  .grid-stats {
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .h-hero {
+    font-size: 2rem;
+  }
+
+  .section-badge {
+    font-size: 0.62rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

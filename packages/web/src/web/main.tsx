@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Router } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./styles.css";
+import "./iphone-se.css";
 import App from "./app.tsx";
 
 const queryClient = new QueryClient();

@@ -27,8 +27,7 @@ export default defineConfig(({ mode }) => {
 					}
 				}
 			},
-			chunkSizeWarningLimit: 600,
-			minify: 'terser'
+			chunkSizeWarningLimit: 600
 		},
 		server: {
 			allowedHosts: true,
