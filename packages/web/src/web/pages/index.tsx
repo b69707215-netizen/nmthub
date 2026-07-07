@@ -1,3 +1,3 @@
-import Landing from "./clean-landing";
+import Landing from "./human-landing";
 
 export default Landing;
