@@ -23,30 +23,16 @@
   animation-delay: -4s;
 }
 
-.float-in {
-  animation: floatIn 0.72s ease both;
-}
-
-.reveal-up {
-  animation: revealUp 0.82s ease both;
-}
-
-.delay-1 {
-  animation-delay: 0.12s;
-}
-
-.delay-2 {
-  animation-delay: 0.24s;
-}
-
-.pulse-score {
-  animation: pulseScore 2.8s ease-in-out infinite;
-}
+.float-in { animation: floatIn 0.72s ease both; }
+.reveal-up { animation: revealUp 0.82s ease both; }
+.delay-1 { animation-delay: 0.12s; }
+.delay-2 { animation-delay: 0.24s; }
+.pulse-score { animation: pulseScore 2.8s ease-in-out infinite; }
 
 .interactive-card {
   position: relative;
   overflow: hidden;
-  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
 }
 
 .interactive-card::after {
@@ -54,20 +40,21 @@
   position: absolute;
   inset: -1px;
   opacity: 0;
-  background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(245, 197, 66, 0.18), transparent 34%);
+  background: radial-gradient(circle at 50% 0%, rgba(245, 197, 66, 0.2), transparent 38%);
   transition: opacity 0.25s ease;
   pointer-events: none;
 }
 
-.interactive-card:hover {
+.interactive-card:hover,
+.active-subject {
   transform: translateY(-6px);
-  border-color: rgba(245, 197, 66, 0.38);
-  background: rgba(255, 255, 255, 0.085);
+  border-color: rgba(245, 197, 66, 0.48) !important;
+  background: linear-gradient(180deg, rgba(245, 197, 66, 0.13), rgba(255, 255, 255, 0.07)) !important;
+  box-shadow: 0 28px 90px rgba(245, 197, 66, 0.14);
 }
 
-.interactive-card:hover::after {
-  opacity: 1;
-}
+.interactive-card:hover::after,
+.active-subject::after { opacity: 1; }
 
 .subject button {
   margin-top: 18px;
@@ -80,24 +67,22 @@
   font-weight: 900;
 }
 
-.tests-section {
-  position: relative;
-}
+.tests-section { position: relative; }
 
 .quiz-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .quiz-card {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 270px;
+  min-height: 255px;
   border: 1px solid var(--line);
   border-radius: 26px;
-  padding: 22px;
+  padding: 20px;
   background: rgba(255, 255, 255, 0.065);
   box-shadow: 0 26px 90px rgba(0, 0, 0, 0.22);
   transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
@@ -139,7 +124,7 @@
 
 .quiz-card h3 {
   margin: 0;
-  font-size: 1.04rem;
+  font-size: 1.02rem;
   line-height: 1.35;
 }
 
@@ -175,79 +160,63 @@
   border: 1px solid rgba(245, 197, 66, 0.22);
 }
 
-.form button:disabled {
-  opacity: 0.7;
-  cursor: wait;
+.rich-prices {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
 }
 
+.price {
+  overflow: hidden;
+}
+
+.price::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(135deg, rgba(245,197,66,.16), transparent 45%);
+  transition: opacity .25s ease;
+}
+
+.price:hover::before,
+.price.featured::before { opacity: 1; }
+
+.price strong {
+  text-shadow: 0 0 28px rgba(245, 197, 66, 0.35);
+}
+
+.form button:disabled { opacity: 0.7; cursor: wait; }
+
 @keyframes revealUp {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes floatIn {
-  from {
-    opacity: 0;
-    transform: translateY(-16px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes orbMove {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(34px, 26px, 0) scale(1.12);
-  }
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(34px, 26px, 0) scale(1.12); }
 }
 
 @keyframes pulseScore {
-  0%, 100% {
-    box-shadow: inset 0 0 28px rgba(245, 197, 66, 0.13), 0 0 42px rgba(245, 197, 66, 0.22);
-  }
-  50% {
-    box-shadow: inset 0 0 32px rgba(245, 197, 66, 0.23), 0 0 66px rgba(245, 197, 66, 0.38);
-  }
+  0%, 100% { box-shadow: inset 0 0 28px rgba(245, 197, 66, 0.13), 0 0 42px rgba(245, 197, 66, 0.22); }
+  50% { box-shadow: inset 0 0 32px rgba(245, 197, 66, 0.23), 0 0 66px rgba(245, 197, 66, 0.38); }
 }
 
-@media (max-width: 1020px) {
-  .quiz-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+@media (max-width: 1180px) {
+  .quiz-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rich-prices { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 
 @media (max-width: 680px) {
-  .orb {
-    width: 240px;
-    height: 240px;
-  }
-
-  .quiz-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quiz-card {
-    min-height: auto;
-    border-radius: 22px;
-    padding: 20px;
-  }
+  .orb { width: 240px; height: 240px; }
+  .quiz-grid, .rich-prices { grid-template-columns: 1fr !important; }
+  .quiz-card { min-height: auto; border-radius: 22px; padding: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb,
-  .float-in,
-  .reveal-up,
-  .pulse-score {
-    animation: none !important;
-  }
+  .orb, .float-in, .reveal-up, .pulse-score { animation: none !important; }
 }
