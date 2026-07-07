@@ -9,6 +9,7 @@
     "dev": "cd packages/web && bunx vite",
     "build": "cd packages/web && bunx vite build",
     "build:web": "cd packages/web && bunx vite build",
+    "deploy": "bun run build && npx wrangler deploy --config wrangler.toml",
     "preview": "cd packages/web && bunx vite preview"
   },
   "devDependencies": {
