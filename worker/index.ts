@@ -31,51 +31,67 @@ function escapeHtml(value: unknown) {
     .replaceAll('"', "&quot;");
 }
 
-function getChatIds(env: Env) {
+function getRawChatIds(env: Env) {
   return (env.TELEGRAM_CHAT_IDS || env.TELEGRAM_CHAT_ID || "")
     .split(",")
     .map((id) => id.trim())
     .filter(Boolean);
 }
 
-async function notifyTelegram(env: Env, text: string) {
-  const token = clean(env.TELEGRAM_BOT_TOKEN, 200);
-  const chatIds = getChatIds(env);
+function getValidChatIds(env: Env) {
+  return getRawChatIds(env).filter((id) => /^-?\d+$/.test(id));
+}
 
-  if (!token || chatIds.length === 0 || token.includes(":" ) === false) {
-    return { ok: false, delivered: 0, error: "telegram_env_missing_or_invalid" };
+async function notifyTelegram(env: Env, text: string) {
+  const token = clean(env.TELEGRAM_BOT_TOKEN, 220);
+  const rawChatIds = getRawChatIds(env);
+  const chatIds = getValidChatIds(env);
+
+  if (!token || !token.includes(":")) {
+    return { ok: false, delivered: 0, error: "telegram_bot_token_missing_or_invalid" };
+  }
+
+  if (rawChatIds.length === 0) {
+    return { ok: false, delivered: 0, error: "telegram_chat_id_missing" };
+  }
+
+  if (chatIds.length === 0) {
+    return { ok: false, delivered: 0, error: "telegram_chat_id_must_be_number" };
   }
 
   const results = await Promise.allSettled(
-    chatIds.map((chatId) =>
-      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    chatIds.map(async (chatId) => {
+      const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
-      }),
-    ),
+      });
+      const data = await response.json().catch(() => ({}));
+      return { ok: response.ok, data };
+    }),
   );
 
   const delivered = results.filter((result) => result.status === "fulfilled" && result.value.ok).length;
-  return { ok: delivered > 0, delivered, error: delivered > 0 ? null : "telegram_send_failed" };
+  const failed = results.length - delivered;
+  return { ok: delivered > 0, delivered, failed, error: delivered > 0 ? null : "telegram_send_failed" };
 }
 
 async function sendLead(request: Request, env: Env) {
   if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
   const body = await request.json().catch(() => ({}));
-  const name = clean((body as Record<string, unknown>).name, 80);
-  const phone = clean((body as Record<string, unknown>).phone, 80);
-  const subject = clean((body as Record<string, unknown>).subject, 80);
-  const score = clean((body as Record<string, unknown>).score, 40);
-  const type = clean((body as Record<string, unknown>).type || "Заявка", 40);
+  const name = clean((body as Record<string, unknown>).name, 80) || "Не вказано";
+  const phone = clean((body as Record<string, unknown>).phone, 80) || "Не вказано";
+  const subject = clean((body as Record<string, unknown>).subject, 80) || "Не вказано";
+  const score = clean((body as Record<string, unknown>).score, 40) || "Не вказано";
+  const type = clean((body as Record<string, unknown>).type || "Заявка", 60);
 
   const text = [
     `<b>${escapeHtml(type)} NMTHub</b>`,
     `Ім'я: ${escapeHtml(name)}`,
     `Телефон: ${escapeHtml(phone)}`,
-    `Предмет: ${escapeHtml(subject)}`,
-    `Тест: ${escapeHtml(score)}`,
+    `Предмет / курс: ${escapeHtml(subject)}`,
+    `Тест / ціна: ${escapeHtml(score)}`,
   ].join("\n");
 
   const telegram = await notifyTelegram(env, text);
