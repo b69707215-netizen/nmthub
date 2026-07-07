@@ -8,20 +8,24 @@
   "scripts": {
     "dev": "cd packages/web && bunx vite",
     "build": "cd packages/web && bunx vite build",
+    "build:web": "cd packages/web && bunx vite build",
     "preview": "cd packages/web && bunx vite preview"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "turbo": "latest"
+    "@tursodatabase/api": "^1.9.2",
+    "@types/bun": "1.3.14",
+    "@types/semver": "^7.7.1",
+    "oxfmt": "0.54.0",
+    "oxlint": "1.69.0",
+    "semver": "^7.7.2",
+    "turbo": "2.9.18",
+    "typescript": "5.9.3",
+    "zod": "^4.3.6"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "lucide-react": "latest",
-    "tailwindcss": "latest",
-    "@tailwindcss/vite": "latest"
+    "@aws-sdk/client-s3": "^3.1023.0",
+    "@libsql/client": "^0.17.2",
+    "cloudflare": "^5.2.0",
+    "pm2": "^7.0.1"
   }
 }
