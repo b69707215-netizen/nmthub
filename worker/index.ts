@@ -19,6 +19,8 @@ type Env = {
   TELEGRAM_CHAT_IDS?: string;
 };
 
+type SubscriberRow = { chat_id: string };
+
 function clean(value: unknown, max = 500) {
   return String(value ?? "").trim().slice(0, max);
 }
@@ -31,6 +33,10 @@ function escapeHtml(value: unknown) {
     .replaceAll('"', "&quot;");
 }
 
+function unique(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
 function getRawChatIds(env: Env) {
   return (env.TELEGRAM_CHAT_IDS || env.TELEGRAM_CHAT_ID || "")
     .split(",")
@@ -38,25 +44,35 @@ function getRawChatIds(env: Env) {
     .filter(Boolean);
 }
 
-function getValidChatIds(env: Env) {
-  return getRawChatIds(env).filter((id) => /^-?\d+$/.test(id));
+function getValidChatIds(values: string[]) {
+  return values.filter((id) => /^-?\d+$/.test(id));
 }
 
-async function notifyTelegram(env: Env, text: string) {
+async function getSubscriberChatIds(env: Env) {
+  if (!env.DB) return [];
+
+  const data = await env.DB
+    .prepare("SELECT chat_id FROM telegram_subscribers ORDER BY last_seen_at DESC LIMIT 1000")
+    .all<SubscriberRow>();
+
+  return (data.results || []).map((row) => clean(row.chat_id, 40));
+}
+
+async function sendTelegramToIds(env: Env, chatIdsInput: string[], text: string) {
   const token = clean(env.TELEGRAM_BOT_TOKEN, 220);
-  const rawChatIds = getRawChatIds(env);
-  const chatIds = getValidChatIds(env);
+  const rawChatIds = unique(chatIdsInput);
+  const chatIds = getValidChatIds(rawChatIds);
 
   if (!token || !token.includes(":")) {
-    return { ok: false, delivered: 0, error: "telegram_bot_token_missing_or_invalid" };
+    return { ok: false, delivered: 0, failed: 0, error: "telegram_bot_token_missing_or_invalid" };
   }
 
   if (rawChatIds.length === 0) {
-    return { ok: false, delivered: 0, error: "telegram_chat_id_missing" };
+    return { ok: false, delivered: 0, failed: 0, error: "telegram_chat_id_missing" };
   }
 
   if (chatIds.length === 0) {
-    return { ok: false, delivered: 0, error: "telegram_chat_id_must_be_number" };
+    return { ok: false, delivered: 0, failed: rawChatIds.length, error: "telegram_chat_id_must_be_number" };
   }
 
   const results = await Promise.allSettled(
@@ -64,7 +80,7 @@ async function notifyTelegram(env: Env, text: string) {
       const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
       });
       const data = await response.json().catch(() => ({}));
       return { ok: response.ok, data };
@@ -74,6 +90,12 @@ async function notifyTelegram(env: Env, text: string) {
   const delivered = results.filter((result) => result.status === "fulfilled" && result.value.ok).length;
   const failed = results.length - delivered;
   return { ok: delivered > 0, delivered, failed, error: delivered > 0 ? null : "telegram_send_failed" };
+}
+
+async function notifyTelegram(env: Env, text: string) {
+  const fixedChatIds = getRawChatIds(env);
+  const subscriberChatIds = await getSubscriberChatIds(env).catch(() => []);
+  return sendTelegramToIds(env, [...fixedChatIds, ...subscriberChatIds], text);
 }
 
 async function sendLead(request: Request, env: Env) {
@@ -105,6 +127,38 @@ async function sendLead(request: Request, env: Env) {
 
   const telegram = await notifyTelegram(env, lines.join("\n"));
   return Response.json({ ok: true, telegram });
+}
+
+async function handleTelegramWebhook(request: Request, env: Env) {
+  if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
+
+  const update = await request.json().catch(() => null) as Record<string, any> | null;
+  const message = update?.message || update?.edited_message;
+  const chat = message?.chat;
+  const from = message?.from || {};
+  const text = clean(message?.text, 500);
+  const chatId = clean(chat?.id, 40);
+
+  if (!chatId) return Response.json({ ok: true, skipped: true });
+
+  if (env.DB) {
+    await env.DB
+      .prepare("INSERT INTO telegram_subscribers (chat_id, username, first_name, last_name, created_at, last_seen_at) VALUES (?, ?, ?, ?, datetime('now'), datetime('now')) ON CONFLICT(chat_id) DO UPDATE SET username = excluded.username, first_name = excluded.first_name, last_name = excluded.last_name, last_seen_at = datetime('now')")
+      .bind(chatId, clean(from.username, 80), clean(from.first_name, 80), clean(from.last_name, 80))
+      .run()
+      .catch(() => undefined);
+  }
+
+  if (text.startsWith("/start")) {
+    await sendTelegramToIds(env, [chatId], [
+      "<b>NMTHub</b>",
+      "Ви підключені до сповіщень.",
+      "Тепер сюди приходитимуть заявки з сайту.",
+      "Сайт: https://add.nmthub.online/",
+    ].join("\n"));
+  }
+
+  return Response.json({ ok: true });
 }
 
 async function listReviews(env: Env) {
@@ -152,6 +206,7 @@ export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/lead") return sendLead(request, env);
+    if (url.pathname === "/api/telegram") return handleTelegramWebhook(request, env);
     if (url.pathname === "/api/reviews" && request.method === "GET") return listReviews(env);
     if (url.pathname === "/api/reviews" && request.method === "POST") return createReview(request, env);
     return env.ASSETS.fetch(request);
