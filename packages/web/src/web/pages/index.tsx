@@ -1,270 +1,253 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ArrowRight,
   Award,
   BookOpen,
   CheckCircle2,
-  ChevronDown,
   Clock,
-  GraduationCap,
   Menu,
   MessageCircle,
   Phone,
+  ShieldCheck,
+  Sparkles,
   Star,
   Target,
+  Users,
   X,
-  Zap,
 } from "lucide-react";
 
-const subjects = [
-  "Математика",
-  "Українська мова",
-  "Історія України",
-  "Англійська мова",
-  "Фізика",
-  "Хімія",
-  "Біологія",
-  "Географія",
+const navItems = [
+  { label: "Головна", id: "home" },
+  { label: "Предмети", id: "subjects" },
+  { label: "Як працює", id: "process" },
+  { label: "Тарифи", id: "prices" },
+  { label: "Контакти", id: "contact" },
 ];
 
-const plans = [
+const subjects = [
+  "Українська мова",
+  "Математика",
+  "Історія України",
+  "Англійська мова",
+  "Біологія",
+  "Географія",
+  "Фізика",
+  "Хімія",
+];
+
+const process = [
+  {
+    title: "Діагностика",
+    text: "Учень проходить короткий тест, щоб зрозуміти сильні та слабкі теми.",
+  },
+  {
+    title: "План підготовки",
+    text: "Після діагностики формується зрозумілий маршрут: що вчити, коли повторювати і як тренуватися.",
+  },
+  {
+    title: "Практика НМТ",
+    text: "Тести, пояснення і пробні варіанти допомагають звикнути до реального формату і таймінгу.",
+  },
+];
+
+const prices = [
   {
     name: "Старт",
     price: "299 грн",
-    text: "Для самостійної підготовки з одного предмета.",
-    features: ["Тести НМТ", "Короткі пояснення", "Особистий прогрес"],
+    description: "Для самостійної підготовки з одного предмета.",
+    features: ["Тести НМТ", "Пояснення до тем", "Особистий прогрес"],
   },
   {
     name: "Профі",
     price: "599 грн",
-    text: "Оптимальний план для активної підготовки.",
-    features: ["3 предмети", "Розбір помилок", "План занять", "Підтримка куратора"],
-    popular: true,
+    description: "Оптимальний формат для стабільної підготовки.",
+    features: ["3 предмети", "Пробні НМТ", "Розбір помилок", "План занять"],
+    featured: true,
   },
   {
     name: "Максимум",
     price: "999 грн",
-    text: "Повний супровід до дня тестування.",
-    features: ["Усі предмети", "Індивідуальні заняття", "Пробні НМТ", "Контроль результату"],
+    description: "Повний супровід до дня тестування.",
+    features: ["Усі предмети", "Індивідуальні заняття", "Контроль результату"],
   },
 ];
 
-const stats = [
-  { value: "8", label: "предметів" },
-  { value: "1200+", label: "тестових завдань" },
-  { value: "92%", label: "учнів покращили бал" },
-  { value: "24/7", label: "доступ до платформи" },
-];
-
 const reviews = [
-  "Після місяця занять я зрозуміла структуру тесту і перестала боятися математики.",
-  "Зручно, що все в одному місці: тести, пояснення, план підготовки і контроль прогресу.",
-  "Найбільше допомогли пробні НМТ та розбір помилок після кожного тесту.",
+  "Стало зрозуміло, які теми реально треба підтягнути перед НМТ.",
+  "Зручно, що все в одному місці: тести, план і пояснення.",
+  "Після пробних тестів перестав боятися формату НМТ.",
 ];
 
-function scrollToId(id: string) {
+function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export default function Index() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [formSent, setFormSent] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [subject, setSubject] = useState(subjects[0]);
+  const [sent, setSent] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(subjects[0]);
 
-  const leadText = useMemo(() => {
-    const lines = [
-      "Нова заявка NMTHub",
-      `Ім'я: ${name || "—"}`,
-      `Телефон: ${phone || "—"}`,
-      `Предмет: ${subject}`,
-    ];
-    return encodeURIComponent(lines.join("\n"));
-  }, [name, phone, subject]);
-
-  const nav = [
-    ["Предмети", "subjects"],
-    ["Переваги", "benefits"],
-    ["Ціни", "pricing"],
-    ["Заявка", "contact"],
-  ];
-
-  function submitLead(event: React.FormEvent<HTMLFormElement>) {
+  function submitForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!name.trim() || !phone.trim()) return;
-
-    const saved = JSON.parse(localStorage.getItem("nmthub-leads") || "[]");
-    saved.push({ name: name.trim(), phone: phone.trim(), subject, createdAt: new Date().toISOString() });
-    localStorage.setItem("nmthub-leads", JSON.stringify(saved));
-    setFormSent(true);
+    setSent(true);
   }
 
   return (
-    <main className="site-shell">
-      <header className="topbar">
-        <button className="brand" onClick={() => scrollToId("home")} aria-label="NMTHub home">
-          <span className="brand-mark">N</span>
-          <span>NMT<b>Hub</b></span>
+    <main className="site" id="home">
+      <header className="header">
+        <button className="logo" onClick={() => scrollToSection("home")} aria-label="NMTHub">
+          <span>NH</span>
+          <strong>NMT<span>Hub</span></strong>
         </button>
 
-        <nav className="desktop-nav" aria-label="Головна навігація">
-          {nav.map(([label, id]) => (
-            <button key={id} onClick={() => scrollToId(id)}>{label}</button>
+        <nav className="nav" aria-label="Основна навігація">
+          {navItems.map((item) => (
+            <button key={item.id} onClick={() => scrollToSection(item.id)}>{item.label}</button>
           ))}
         </nav>
 
-        <button className="nav-cta desktop-only" onClick={() => scrollToId("contact")}>Пробний урок</button>
-        <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Відкрити меню"><Menu size={22} /></button>
+        <button className="header-cta" onClick={() => scrollToSection("contact")}>Записатися</button>
+        <button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Відкрити меню"><Menu size={22} /></button>
       </header>
 
       {menuOpen && (
-        <div className="mobile-menu">
-          <button className="menu-close" onClick={() => setMenuOpen(false)} aria-label="Закрити меню"><X size={22} /></button>
-          {nav.map(([label, id]) => (
-            <button key={id} onClick={() => { setMenuOpen(false); scrollToId(id); }}>{label}</button>
+        <div className="mobile-panel">
+          <button className="close-button" onClick={() => setMenuOpen(false)} aria-label="Закрити меню"><X size={22} /></button>
+          {navItems.map((item) => (
+            <button key={item.id} onClick={() => { setMenuOpen(false); scrollToSection(item.id); }}>{item.label}</button>
           ))}
         </div>
       )}
 
-      <section id="home" className="hero section-pad">
-        <div className="hero-content">
-          <div className="badge"><Zap size={16} /> Онлайн-підготовка до НМТ</div>
-          <h1>Здай НМТ <span>на максимум</span></h1>
+      <section className="hero section">
+        <div className="hero-text">
+          <div className="label"><Sparkles size={16} /> Онлайн-підготовка до НМТ</div>
+          <h1>Підготуйся до НМТ без хаосу і зайвого стресу</h1>
           <p>
-            NMTHub — сучасна платформа для підготовки до НМТ: тести, пояснення,
-            пробні варіанти, план навчання і контроль прогресу в одному місці.
+            NMTHub — це простий сайт для підготовки до НМТ: предмети, тести, план занять,
+            пробні варіанти та заявка на пробний урок в одному місці.
           </p>
           <div className="hero-actions">
-            <button className="primary" onClick={() => scrollToId("contact")}>Записатися <ArrowRight size={18} /></button>
-            <button className="secondary" onClick={() => scrollToId("subjects")}>Дивитися предмети</button>
+            <button className="primary" onClick={() => scrollToSection("contact")}>Пробний урок <ArrowRight size={18} /></button>
+            <button className="secondary" onClick={() => scrollToSection("subjects")}>Переглянути предмети</button>
           </div>
         </div>
 
-        <div className="hero-card" aria-label="Переваги NMTHub">
-          <div className="score-ring">200</div>
+        <div className="hero-card">
+          <div className="score">200</div>
           <h2>Ціль — високий бал</h2>
-          <p>Розумна структура занять допомагає рухатися від слабких тем до впевненого результату.</p>
-          <div className="mini-list">
-            <span><CheckCircle2 size={16} /> Персональний план</span>
-            <span><CheckCircle2 size={16} /> Пробні тести</span>
-            <span><CheckCircle2 size={16} /> Розбір помилок</span>
+          <p>Сайт веде учня від першої діагностики до впевненого проходження пробних НМТ.</p>
+          <div className="card-list">
+            <span><CheckCircle2 size={17} /> Зрозумілий план</span>
+            <span><CheckCircle2 size={17} /> Практика у форматі НМТ</span>
+            <span><CheckCircle2 size={17} /> Фокус на слабких темах</span>
           </div>
         </div>
       </section>
 
-      <section className="stats-grid" aria-label="Статистика">
-        {stats.map((item) => (
-          <div className="stat" key={item.label}>
-            <strong>{item.value}</strong>
-            <span>{item.label}</span>
-          </div>
-        ))}
+      <section className="stats">
+        <article><strong>8</strong><span>предметів</span></article>
+        <article><strong>1200+</strong><span>завдань</span></article>
+        <article><strong>24/7</strong><span>доступ</span></article>
+        <article><strong>92%</strong><span>покращують результат</span></article>
       </section>
 
-      <section id="subjects" className="section-pad">
+      <section className="section" id="subjects">
         <div className="section-head">
-          <span className="eyebrow"><BookOpen size={16} /> Предмети</span>
-          <h2>Підготовка з усіх основних предметів НМТ</h2>
-          <p>Обирай один предмет або готуйся комплексно за повною програмою.</p>
+          <div className="label"><BookOpen size={16} /> Предмети</div>
+          <h2>Усе потрібне для підготовки до НМТ</h2>
+          <p>Обирай один предмет або готуйся комплексно за кількома напрямами.</p>
         </div>
         <div className="subject-grid">
-          {subjects.map((item, index) => (
-            <article className="subject-card" key={item}>
-              <div className="subject-icon">{index + 1}</div>
-              <h3>{item}</h3>
-              <p>Теми, тести, пояснення та завдання у форматі реального НМТ.</p>
+          {subjects.map((subject, index) => (
+            <article className="subject" key={subject}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <h3>{subject}</h3>
+              <p>Теорія, тести, повторення і пробні завдання у форматі НМТ.</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="benefits" className="section-pad split-section">
-        <div>
-          <span className="eyebrow"><Target size={16} /> Чому це працює</span>
-          <h2>Без хаосу, зайвих матеріалів і втрати часу</h2>
-          <p>
-            Сайт побудований як зрозуміла система: спочатку діагностика, потім план,
-            практика, перевірка помилок і повторення слабких тем.
-          </p>
+      <section className="section process" id="process">
+        <div className="section-head left">
+          <div className="label"><Target size={16} /> Як працює</div>
+          <h2>Проста система підготовки</h2>
+          <p>Без зайвих складних кабінетів і незрозумілих екранів — тільки те, що допомагає готуватися.</p>
         </div>
-        <div className="benefit-list">
-          <div><GraduationCap /> <span>Програма під НМТ</span></div>
-          <div><Clock /> <span>Підготовка у зручному темпі</span></div>
-          <div><Award /> <span>Фокус на результат</span></div>
-          <div><MessageCircle /> <span>Підтримка під час навчання</span></div>
-        </div>
-      </section>
-
-      <section className="section-pad reviews">
-        <div className="section-head">
-          <span className="eyebrow"><Star size={16} /> Відгуки</span>
-          <h2>Що кажуть учні</h2>
-        </div>
-        <div className="review-grid">
-          {reviews.map((review, index) => (
-            <article className="review-card" key={review}>
-              <div className="stars">★★★★★</div>
-              <p>“{review}”</p>
-              <strong>Учень #{index + 1}</strong>
+        <div className="process-grid">
+          {process.map((item, index) => (
+            <article className="process-card" key={item.title}>
+              <span>{index + 1}</span>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="pricing" className="section-pad">
+      <section className="section benefits">
+        <div className="benefit-card"><Clock /><strong>Підготовка у своєму темпі</strong><p>Учень бачить, що вже пройдено, а що ще треба повторити.</p></div>
+        <div className="benefit-card"><Users /><strong>Підтримка учнів</strong><p>Заявка допомагає швидко підібрати предмет і формат навчання.</p></div>
+        <div className="benefit-card"><ShieldCheck /><strong>Стабільний сайт</strong><p>Сайт працює як статичний лендинг і швидко відкривається на телефоні.</p></div>
+        <div className="benefit-card"><Award /><strong>Фокус на результат</strong><p>Головна мета — впевнено пройти НМТ і покращити бал.</p></div>
+      </section>
+
+      <section className="section" id="prices">
         <div className="section-head">
-          <span className="eyebrow"><ChevronDown size={16} /> Тарифи</span>
-          <h2>Обери формат підготовки</h2>
+          <div className="label"><Star size={16} /> Тарифи</div>
+          <h2>Формати підготовки</h2>
+          <p>Ціни можна змінити під реальні умови перед запуском.</p>
         </div>
-        <div className="pricing-grid">
-          {plans.map((plan) => (
-            <article className={plan.popular ? "plan popular" : "plan"} key={plan.name}>
-              {plan.popular && <span className="popular-label">Популярний</span>}
+        <div className="price-grid">
+          {prices.map((plan) => (
+            <article className={plan.featured ? "price featured" : "price"} key={plan.name}>
+              {plan.featured && <span className="popular">Популярний</span>}
               <h3>{plan.name}</h3>
               <strong>{plan.price}</strong>
-              <p>{plan.text}</p>
+              <p>{plan.description}</p>
               <ul>
                 {plan.features.map((feature) => <li key={feature}><CheckCircle2 size={16} /> {feature}</li>)}
               </ul>
-              <button onClick={() => scrollToId("contact")}>Обрати</button>
+              <button onClick={() => scrollToSection("contact")}>Обрати</button>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="contact" className="section-pad contact-section">
+      <section className="section reviews">
+        {reviews.map((review) => (
+          <article key={review}>
+            <div>★★★★★</div>
+            <p>“{review}”</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="section contact" id="contact">
         <div>
-          <span className="eyebrow"><Phone size={16} /> Заявка</span>
-          <h2>Запишись на пробний урок</h2>
-          <p>Залиш контакти, і менеджер допоможе підібрати предмет та формат підготовки.</p>
-          <a className="telegram-link" href={`https://t.me/share/url?url=&text=${leadText}`} target="_blank" rel="noreferrer">
-            Відправити дані в Telegram
-          </a>
+          <div className="label"><Phone size={16} /> Контакти</div>
+          <h2>Запис на пробний урок</h2>
+          <p>Залиш контакти, і ми підберемо предмет, формат підготовки та зручний графік.</p>
+          <a className="contact-link" href="tel:+380000000000">+380 00 000 00 00</a>
+          <a className="contact-link" href="https://t.me/" target="_blank" rel="noreferrer"><MessageCircle size={18} /> Telegram</a>
         </div>
 
-        <form className="lead-form" onSubmit={submitLead}>
-          {formSent ? (
-            <div className="success-box">
-              <CheckCircle2 size={38} />
-              <h3>Заявку збережено</h3>
-              <p>Дані збережені у браузері. Для живого відправлення додай Telegram/Cloudflare secret.</p>
-              <button type="button" onClick={() => setFormSent(false)}>Нова заявка</button>
+        <form className="form" onSubmit={submitForm}>
+          {sent ? (
+            <div className="success">
+              <CheckCircle2 size={42} />
+              <h3>Заявку прийнято</h3>
+              <p>Форма працює на сайті без backend. Для реального надсилання можна підключити Telegram або email.</p>
+              <button type="button" onClick={() => setSent(false)}>Заповнити ще раз</button>
             </div>
           ) : (
             <>
-              <label>
-                Ім'я
-                <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Наприклад, Данило" required />
-              </label>
-              <label>
-                Телефон
-                <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." required />
-              </label>
-              <label>
-                Предмет
-                <select value={subject} onChange={(event) => setSubject(event.target.value)}>
-                  {subjects.map((item) => <option key={item}>{item}</option>)}
+              <label>Ім'я<input name="name" placeholder="Ваше ім'я" required /></label>
+              <label>Телефон<input name="phone" placeholder="+380..." required /></label>
+              <label>Предмет
+                <select value={selectedSubject} onChange={(event) => setSelectedSubject(event.target.value)}>
+                  {subjects.map((subject) => <option key={subject}>{subject}</option>)}
                 </select>
               </label>
               <button className="primary" type="submit">Надіслати заявку <ArrowRight size={18} /></button>
@@ -274,8 +257,8 @@ export default function Index() {
       </section>
 
       <footer className="footer">
-        <div className="brand"><span className="brand-mark">N</span><span>NMT<b>Hub</b></span></div>
-        <p>© 2026 NMTHub. Підготовка до НМТ онлайн.</p>
+        <div className="logo"><span>NH</span><strong>NMT<span>Hub</span></strong></div>
+        <p>© 2026 NMTHub. Сайт підготовки до НМТ.</p>
       </footer>
     </main>
   );
