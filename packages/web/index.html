@@ -16,6 +16,67 @@
 	</head>
 	<body>
 		<div id="root"></div>
+		<script>
+			(function () {
+				var selectedCourse = null;
+				var nativeFetch = window.fetch.bind(window);
+
+				function showCourseNote() {
+					var form = document.querySelector(".form");
+					if (!form || !selectedCourse) return;
+					var note = document.getElementById("selected-course-note");
+					if (!note) {
+						note = document.createElement("div");
+						note.id = "selected-course-note";
+						note.className = "result-pill";
+						var button = form.querySelector('button[type="submit"]');
+						form.insertBefore(note, button || null);
+					}
+					note.innerHTML = "Обраний пакет: <b>" + selectedCourse.title + " — " + selectedCourse.price + "</b>";
+				}
+
+				document.addEventListener("click", function (event) {
+					var button = event.target.closest && event.target.closest(".price button");
+					if (!button) return;
+					var card = button.closest(".price");
+					selectedCourse = {
+						title: card && card.querySelector("h3") ? card.querySelector("h3").textContent.trim() : "Пакет уроків",
+						price: card && card.querySelector("strong") ? card.querySelector("strong").textContent.trim() : ""
+					};
+					try { sessionStorage.setItem("nmthub-course", JSON.stringify(selectedCourse)); } catch (error) {}
+					event.preventDefault();
+					event.stopPropagation();
+					if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+					document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+					setTimeout(showCourseNote, 120);
+				}, true);
+
+				window.fetch = function (input, init) {
+					var url = typeof input === "string" ? input : input && input.url;
+					if (url === "/api/lead" && init && init.body) {
+						try {
+							var body = JSON.parse(init.body);
+							if (body.type === "Оплата курсу" && body.name === "Клік по оплаті") {
+								return Promise.resolve(new Response(JSON.stringify({ ok: true, skipped: true }), { headers: { "Content-Type": "application/json" } }));
+							}
+							if (body.type === "Заявка") {
+								var saved = selectedCourse;
+								if (!saved) {
+									try { saved = JSON.parse(sessionStorage.getItem("nmthub-course") || "null"); } catch (error) {}
+								}
+								if (saved && saved.title) {
+									body.type = "Заявка на пакет уроків";
+									body.courseTitle = saved.title;
+									body.coursePrice = saved.price || "";
+									init = Object.assign({}, init, { body: JSON.stringify(body) });
+								}
+							}
+						} catch (error) {}
+					}
+					return nativeFetch(input, init);
+				};
+			})();
+		</script>
 		<script type="module" src="/src/web/main.tsx"></script>
 	</body>
 </html>
