@@ -22,6 +22,38 @@
   display: none !important;
 }
 
+.hero-actions .primary {
+  font-size: 0 !important;
+}
+
+.hero-actions .primary::after {
+  content: "Пройти тест";
+  font-size: 1rem;
+}
+
+.nav button:nth-child(3) {
+  font-size: 0 !important;
+}
+
+.nav button:nth-child(3)::after {
+  content: "Тест";
+  font-size: 1rem;
+}
+
+.tests-section .section-head .label {
+  font-size: 0 !important;
+}
+
+.tests-section .section-head .label svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tests-section .section-head .label::after {
+  content: "Тест";
+  font-size: .82rem;
+}
+
 .hero-card > p,
 .hero-card .card-list {
   display: none !important;
