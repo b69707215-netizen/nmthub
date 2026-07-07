@@ -20,54 +20,72 @@
 			(function () {
 				var selectedCourse = null;
 				var nativeFetch = window.fetch.bind(window);
+				var reviewsHtml = [
+					['★★★★★', 'Математика', 'Марія, 11 клас', 'До занять пробники тримались біля 150. Після курсу стала спокійно розбирати задачі, які раніше пропускала. Останній результат — 180.'],
+					['★★★★★', 'Українська мова', 'Артем, випускник', 'Найбільше допоміг розбір помилок. Наголоси, коми й типові завдання нарешті стали зрозумілими, а не просто списком правил.'],
+					['★★★★★', 'Історія України', 'Софія, 11 клас', 'Раніше дати плутались між собою. Після занять з’явився порядок: події, причини, наслідки. Пробник виріс зі 156 до 184.'],
+					['★★★★☆', 'Англійська мова', 'Данило, 11 клас', 'Було складно з граматикою, але короткі пояснення і багато практики допомогли. Хотів би ще більше завдань на читання, але результатом задоволений.'],
+					['★★★★☆', 'Біологія', 'Олена, 11 клас', 'Після курсу стало легше бачити логіку в темах. Не все запам’яталось з першого разу, але повторення і тести добре тримають в тонусі.'],
+					['★★★☆☆', 'Фізика', 'Максим, 11 клас', 'Стало зрозуміліше, з чого починати задачі. Мені не вистачило повільнішого темпу на складних темах, але базу підтягнув нормально.']
+				].map(function (review) {
+					return '<article class="interactive-card"><div>' + review[0] + '</div><h3>' + review[1] + '</h3><p>' + review[3] + '</p><span class="review-author">' + review[2] + '</span></article>';
+				}).join('');
 
 				function showCourseNote() {
-					var form = document.querySelector(".form");
+					var form = document.querySelector('.form');
 					if (!form || !selectedCourse) return;
-					var note = document.getElementById("selected-course-note");
+					var note = document.getElementById('selected-course-note');
 					if (!note) {
-						note = document.createElement("div");
-						note.id = "selected-course-note";
-						note.className = "result-pill";
+						note = document.createElement('div');
+						note.id = 'selected-course-note';
+						note.className = 'result-pill';
 						var button = form.querySelector('button[type="submit"]');
 						form.insertBefore(note, button || null);
 					}
-					note.innerHTML = "Обраний пакет: <b>" + selectedCourse.title + " — " + selectedCourse.price + "</b>";
+					note.innerHTML = 'Обраний пакет: <b>' + selectedCourse.title + ' — ' + selectedCourse.price + '</b>';
 				}
 
-				document.addEventListener("click", function (event) {
-					var button = event.target.closest && event.target.closest(".price button");
+				function applyTextFixes() {
+					document.querySelectorAll('.quiz-top span').forEach(function (item) {
+						if (item.textContent && item.textContent.indexOf('Без років') !== -1) item.textContent = 'Питання';
+					});
+					var reviews = document.querySelector('#reviews .reviews');
+					if (reviews && reviews.innerHTML.indexOf('Максим, 11 клас') === -1) reviews.innerHTML = reviewsHtml;
+				}
+
+				document.addEventListener('click', function (event) {
+					var button = event.target.closest && event.target.closest('.price button');
 					if (!button) return;
-					var card = button.closest(".price");
+					var card = button.closest('.price');
 					selectedCourse = {
-						title: card && card.querySelector("h3") ? card.querySelector("h3").textContent.trim() : "Пакет уроків",
-						price: card && card.querySelector("strong") ? card.querySelector("strong").textContent.trim() : ""
+						title: card && card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : 'Пакет уроків',
+						price: card && card.querySelector('strong') ? card.querySelector('strong').textContent.trim() : ''
 					};
-					try { sessionStorage.setItem("nmthub-course", JSON.stringify(selectedCourse)); } catch (error) {}
+					try { sessionStorage.setItem('nmthub-course', JSON.stringify(selectedCourse)); } catch (error) {}
 					event.preventDefault();
 					event.stopPropagation();
 					if (event.stopImmediatePropagation) event.stopImmediatePropagation();
-					document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+					document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 					setTimeout(showCourseNote, 120);
 				}, true);
 
 				window.fetch = function (input, init) {
-					var url = typeof input === "string" ? input : input && input.url;
-					if (url === "/api/lead" && init && init.body) {
+					var url = typeof input === 'string' ? input : input && input.url;
+					if (url === '/api/lead' && init && init.body) {
 						try {
 							var body = JSON.parse(init.body);
-							if (body.type === "Оплата курсу" && body.name === "Клік по оплаті") {
-								return Promise.resolve(new Response(JSON.stringify({ ok: true, skipped: true }), { headers: { "Content-Type": "application/json" } }));
+							if (body.type === 'Оплата курсу' && body.name === 'Клік по оплаті') {
+								return Promise.resolve(new Response(JSON.stringify({ ok: true, skipped: true }), { headers: { 'Content-Type': 'application/json' } }));
 							}
-							if (body.type === "Заявка") {
+							if (body.type === 'Заявка') {
 								var saved = selectedCourse;
 								if (!saved) {
-									try { saved = JSON.parse(sessionStorage.getItem("nmthub-course") || "null"); } catch (error) {}
+									try { saved = JSON.parse(sessionStorage.getItem('nmthub-course') || 'null'); } catch (error) {}
 								}
 								if (saved && saved.title) {
-									body.type = "Заявка на пакет уроків";
+									body.type = 'Заявка на пакет уроків';
 									body.courseTitle = saved.title;
-									body.coursePrice = saved.price || "";
+									body.coursePrice = saved.price || '';
 									init = Object.assign({}, init, { body: JSON.stringify(body) });
 								}
 							}
@@ -75,6 +93,15 @@
 					}
 					return nativeFetch(input, init);
 				};
+
+				var queued = false;
+				new MutationObserver(function () {
+					if (queued) return;
+					queued = true;
+					setTimeout(function () { queued = false; applyTextFixes(); }, 60);
+				}).observe(document.documentElement, { childList: true, subtree: true });
+				window.addEventListener('load', applyTextFixes);
+				setTimeout(applyTextFixes, 500);
 			})();
 		</script>
 		<script type="module" src="/src/web/main.tsx"></script>
