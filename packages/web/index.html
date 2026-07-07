@@ -16,6 +16,20 @@
 	</head>
 	<body>
 		<div id="root"></div>
+		<script>
+			document.addEventListener("click", function (event) {
+				var button = event.target.closest && event.target.closest(".price button");
+				if (!button) return;
+				var card = button.closest(".price");
+				var subject = card && card.querySelector("h3") ? card.querySelector("h3").textContent : "Курс";
+				var score = card && card.querySelector("strong") ? card.querySelector("strong").textContent : "";
+				fetch("/api/lead", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ type: "Оплата курсу", name: "Клік по оплаті", phone: "", subject: subject, score: score })
+				}).catch(function () {});
+			}, true);
+		</script>
 		<script type="module" src="/src/web/main.tsx"></script>
 	</body>
 </html>
