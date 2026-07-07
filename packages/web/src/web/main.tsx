@@ -1,19 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Router } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./styles.css";
 import "./iphone-se.css";
-import App from "./app.tsx";
+import App from "./app";
 
-const queryClient = new QueryClient();
+const root = document.getElementById("root");
 
-createRoot(document.getElementById("root")!).render(
-	<StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<Router>
-				<App />
-			</Router>
-		</QueryClientProvider>
-	</StrictMode>,
+if (!root) {
+  throw new Error("Root element not found");
+}
+
+createRoot(root).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
 );
