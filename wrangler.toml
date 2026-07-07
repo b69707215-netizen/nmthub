@@ -1,6 +1,5 @@
 name = "nmthub"
 compatibility_date = "2026-07-07"
-pages_build_output_dir = "./packages/web/dist"
 
 [assets]
 directory = "./packages/web/dist"
