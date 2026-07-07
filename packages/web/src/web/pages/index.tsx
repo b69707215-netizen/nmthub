@@ -36,15 +36,30 @@ export default function Index() {
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
 
   const score = useMemo(() => tests.reduce((sum, test) => sum + (answers[test.subject] === test.answer ? 1 : 0), 0), [answers]);
   const shareText = encodeURIComponent(`Нова заявка NMTHub\nІм'я: ${name || "—"}\nТелефон: ${phone || "—"}\nПредмет: ${selectedSubject}\nМіні-тест: ${score}/${tests.length}`);
 
-  function submitForm(event: React.FormEvent<HTMLFormElement>) {
+  async function submitForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    localStorage.setItem("nmthub-lead", JSON.stringify({ name, phone, subject: selectedSubject, score, createdAt: new Date().toISOString() }));
+    const payload = { name, phone, subject: selectedSubject, score: `${score}/${tests.length}` };
+    localStorage.setItem("nmthub-lead", JSON.stringify({ ...payload, createdAt: new Date().toISOString() }));
+
+    try {
+      const response = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error("send failed");
+      setMessage("Заявка відправлена в Telegram.");
+    } catch {
+      setMessage("Заявку збережено. Якщо Telegram не прийшов, додай TELEGRAM_BOT_TOKEN і TELEGRAM_CHAT_ID у Cloudflare Variables.");
+      window.open(`https://t.me/share/url?url=&text=${shareText}`, "_blank", "noopener,noreferrer");
+    }
+
     setSent(true);
-    window.open(`https://t.me/share/url?url=&text=${shareText}`, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -76,7 +91,7 @@ export default function Index() {
 
       <section className="section" id="prices"><div className="section-head"><div className="label"><Star size={16} /> Тарифи</div><h2>Формати підготовки</h2><p>Можна змінити під реальні ціни перед запуском.</p></div><div className="price-grid">{plans.map(([name, price, text], index) => <article className={index === 1 ? "price featured" : "price"} key={name}>{index === 1 && <span className="popular">Популярний</span>}<h3>{name}</h3><strong>{price}</strong><p>{text}</p><ul><li><CheckCircle2 size={16} /> Міні-тести</li><li><CheckCircle2 size={16} /> План підготовки</li><li><CheckCircle2 size={16} /> Прогрес учня</li></ul><button onClick={() => scrollToSection("contact")}>Обрати</button></article>)}</div></section>
 
-      <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Запис на пробний урок</h2><p>Заповни форму. Дані відкриються для відправки в Telegram і збережуться на сайті.</p><a className="contact-link" href={`https://t.me/share/url?url=&text=${shareText}`} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Відправити в Telegram</a></div><form className="form" onSubmit={submitForm}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Дані збережено. Telegram відкрився для відправки заявки.</p><button type="button" onClick={() => setSent(false)}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380..." required /></label><label>Предмет<select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>{subjects.map((subject) => <option key={subject}>{subject}</option>)}</select></label><div className="result-pill">Результат міні-тесту: <b>{score}/{tests.length}</b></div><button className="primary" type="submit">Надіслати заявку <ArrowRight size={18} /></button></>}</form></section>
+      <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Запис на пробний урок</h2><p>Заповни форму. Якщо Cloudflare Variables налаштовані, заявка автоматично прийде в Telegram.</p><a className="contact-link" href={`https://t.me/share/url?url=&text=${shareText}`} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Відправити вручну</a></div><form className="form" onSubmit={submitForm}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>{message}</p><button type="button" onClick={() => setSent(false)}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380..." required /></label><label>Предмет<select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>{subjects.map((subject) => <option key={subject}>{subject}</option>)}</select></label><div className="result-pill">Результат міні-тесту: <b>{score}/{tests.length}</b></div><button className="primary" type="submit">Надіслати заявку <ArrowRight size={18} /></button></>}</form></section>
 
       <footer className="footer"><div className="logo"><span>NH</span><strong>NMT<span>Hub</span></strong></div><p>© 2026 NMTHub. Сайт підготовки до НМТ.</p></footer>
     </main>
