@@ -1,38 +1,11 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwind from "@tailwindcss/vite"
-import path from "path";
-import runableAnalyticsPlugin from "./vite/plugins/runable-analytics-plugin";
-import honoDevPlugin from "./vite/plugins/hono-dev-plugin";
+import tailwind from "@tailwindcss/vite";
 
-const root = path.resolve(__dirname, "../..");
-
-export default defineConfig(({ mode }) => {
-	const env = loadEnv(mode, root, '');
-	Object.assign(process.env, env);
-
-	return {
-		plugins: [honoDevPlugin(), react(), runableAnalyticsPlugin(), tailwind()],
-		resolve: {
-			alias: {
-				"@": path.resolve(__dirname, "./src/web"),
-			},
-		},
-		build: {
-			rollupOptions: {
-				output: {
-					manualChunks: {
-						vendor: ['react', 'react-dom', 'lucide-react'],
-						ui: ['react-hook-form', 'zod'],
-					}
-				}
-			},
-			chunkSizeWarningLimit: 600
-		},
-		server: {
-			allowedHosts: true,
-			hmr: { overlay: false, },
-			cors: false
-		}
-	};
+export default defineConfig({
+  plugins: [react(), tailwind()],
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+  },
 });
