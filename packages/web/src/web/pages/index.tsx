@@ -1,4 +1,3 @@
-import "../reviews.css";
-import Landing from "./landing";
+import Landing from "./clean-landing";
 
 export default Landing;
