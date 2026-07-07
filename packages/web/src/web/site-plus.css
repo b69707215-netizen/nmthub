@@ -18,6 +18,10 @@
 .delay-2 { animation-delay: 0.24s; }
 .pulse-score { animation: pulseScore 2.8s ease-in-out infinite; }
 
+.hero-text > p {
+  display: none !important;
+}
+
 .hero-card > p,
 .hero-card .card-list {
   display: none !important;
