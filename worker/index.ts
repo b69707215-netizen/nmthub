@@ -80,21 +80,30 @@ async function sendLead(request: Request, env: Env) {
   if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
   const body = await request.json().catch(() => ({}));
-  const name = clean((body as Record<string, unknown>).name, 80) || "Не вказано";
-  const phone = clean((body as Record<string, unknown>).phone, 80) || "Не вказано";
-  const subject = clean((body as Record<string, unknown>).subject, 80) || "Не вказано";
-  const score = clean((body as Record<string, unknown>).score, 40) || "Не вказано";
-  const type = clean((body as Record<string, unknown>).type || "Заявка", 60);
+  const source = body as Record<string, unknown>;
+  const name = clean(source.name, 80) || "Не вказано";
+  const phone = clean(source.phone, 80) || "Не вказано";
+  const subject = clean(source.subject, 80) || "Не вказано";
+  const score = clean(source.score, 40) || "Не вказано";
+  const type = clean(source.type || "Заявка", 60);
+  const courseTitle = clean(source.courseTitle, 100);
+  const coursePrice = clean(source.coursePrice, 60);
+  const correct = clean(source.correct, 20);
+  const wrong = clean(source.wrong, 20);
 
-  const text = [
+  const lines = [
     `<b>${escapeHtml(type)} NMTHub</b>`,
     `Ім'я: ${escapeHtml(name)}`,
     `Телефон: ${escapeHtml(phone)}`,
-    `Предмет / курс: ${escapeHtml(subject)}`,
-    `Тест / ціна: ${escapeHtml(score)}`,
-  ].join("\n");
+    `Предмет: ${escapeHtml(subject)}`,
+  ];
 
-  const telegram = await notifyTelegram(env, text);
+  if (courseTitle) lines.push(`Пакет: ${escapeHtml(courseTitle)}`);
+  if (coursePrice) lines.push(`Ціна: ${escapeHtml(coursePrice)}`);
+  lines.push(`Результат тесту: ${escapeHtml(score)}`);
+  if (correct || wrong) lines.push(`Статистика: правильно ${escapeHtml(correct || "0")}, неправильно ${escapeHtml(wrong || "0")}`);
+
+  const telegram = await notifyTelegram(env, lines.join("\n"));
   return Response.json({ ok: true, telegram });
 }
 
