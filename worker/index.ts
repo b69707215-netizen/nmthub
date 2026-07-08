@@ -121,15 +121,20 @@ async function sendLead(request: Request, env: Env) {
 
   const body = await request.json().catch(() => ({}));
   const source = body as Record<string, unknown>;
-  const name = clean(source.name, 80) || "Не вказано";
-  const phone = clean(source.phone, 80) || "Не вказано";
-  const subject = clean(source.subject, 80) || "Не вказано";
-  const score = clean(source.score, 40) || "Не вказано";
-  const type = clean(source.type || "Заявка", 60);
+  const name = clean(source.name, 80);
+  const phone = clean(source.phone, 80);
+  const subject = clean(source.subject, 80) || "Не обрано";
+  const score = clean(source.score, 40) || "Не проходив тест";
+  const type = clean(source.type || "Заявка", 80);
   const courseTitle = clean(source.courseTitle, 100);
   const coursePrice = clean(source.coursePrice, 60);
   const correct = clean(source.correct, 20);
   const wrong = clean(source.wrong, 20);
+  const page = clean(request.headers.get("referer"), 300) || "Сайт";
+
+  if (!name || !phone) {
+    return Response.json({ ok: false, error: "name_and_phone_required" }, { status: 400 });
+  }
 
   const lines = [
     `<b>${escapeHtml(type)} NMTHub</b>`,
@@ -142,9 +147,15 @@ async function sendLead(request: Request, env: Env) {
   if (coursePrice) lines.push(`Ціна: ${escapeHtml(coursePrice)}`);
   lines.push(`Результат тесту: ${escapeHtml(score)}`);
   if (correct || wrong) lines.push(`Статистика: правильно ${escapeHtml(correct || "0")}, неправильно ${escapeHtml(wrong || "0")}`);
+  lines.push(`Сторінка: ${escapeHtml(page)}`);
 
   const telegram = await notifyTelegram(env, lines.join("\n"));
-  return Response.json({ ok: true, telegram });
+
+  if (!telegram.ok) {
+    return Response.json({ ok: false, error: telegram.error || "telegram_send_failed", telegram }, { status: 502 });
+  }
+
+  return Response.json({ ok: true, telegram }, { headers: { "Cache-Control": "no-store" } });
 }
 
 async function handleTelegramWebhook(request: Request, env: Env) {
@@ -194,7 +205,7 @@ async function createReview(request: Request, env: Env) {
 
   const body = await request.json().catch(() => ({}));
   const name = clean((body as Record<string, unknown>).name, 80) || "Учень";
-  const subject = clean((body as Record<string, unknown>).subject, 80);
+  const subject = clean((body as Record<string, unknown>).subject, 80) || "Не обрано";
   const score = clean((body as Record<string, unknown>).score, 40);
   const text = clean((body as Record<string, unknown>).text, 600);
 
