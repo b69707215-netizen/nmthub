@@ -12,6 +12,7 @@ function scrollTo(id: string) {
 export default function FinalLanding() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [subject, setSubject] = useState(subjects[0]);
+  const [leadSubject, setLeadSubject] = useState("");
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [name, setName] = useState("");
@@ -19,15 +20,16 @@ export default function FinalLanding() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
-  const questions = quizBank[subject];
+  const questions = quizBank[subject] || [];
   const question = questions[index];
   const key = `${subject}-${index}`;
   const picked = answers[key];
   const score = useMemo(() => questions.reduce((sum, item, itemIndex) => sum + (answers[`${subject}-${itemIndex}`] === item.answer ? 1 : 0), 0), [answers, questions, subject]);
   const answered = questions.filter((_, itemIndex) => answers[`${subject}-${itemIndex}`] !== undefined).length;
   const wrong = Math.max(0, answered - score);
-  const percent = Math.round((score / questions.length) * 100);
+  const percent = questions.length ? Math.round((score / questions.length) * 100) : 0;
   const recommendation = score >= 8 ? "База сильна. Далі варто добити складні теми й тренувати швидкість." : score >= 5 ? "Старт нормальний. Потрібно підтягнути слабкі теми й більше практикувати типові завдання." : "Краще почати з основ. Так буде спокійніше й без хаосу перед НМТ.";
 
   function choose(optionIndex: number) {
@@ -37,6 +39,7 @@ export default function FinalLanding() {
 
   function openSubject(next: string) {
     setSubject(next);
+    setLeadSubject(next);
     setIndex(0);
     scrollTo("tests");
   }
@@ -46,14 +49,25 @@ export default function FinalLanding() {
     scrollTo("contact");
   }
 
+  function resetCurrentTest() {
+    setAnswers((current) => {
+      const next = { ...current };
+      questions.forEach((_, itemIndex) => delete next[`${subject}-${itemIndex}`]);
+      return next;
+    });
+    setIndex(0);
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSending(true);
+    setSendError("");
+
     const payload = {
       type: selectedCourse ? "Заявка на пакет уроків" : "Заявка",
-      name,
-      phone,
-      subject,
+      name: name.trim(),
+      phone: phone.trim(),
+      subject: leadSubject.trim(),
       score: `${score}/${questions.length}`,
       correct: score,
       wrong,
@@ -64,16 +78,20 @@ export default function FinalLanding() {
     localStorage.setItem("nmthub-lead", JSON.stringify({ ...payload, createdAt: new Date().toISOString() }));
 
     try {
-      await fetch("/api/lead", {
+      const response = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-    } catch {
-      // Не показуємо технічні помилки учню. Заявка збережена локально.
+      const data = await response.json().catch(() => null) as { ok?: boolean; telegram?: { ok?: boolean; error?: string } } | null;
+      if (!response.ok || !data?.ok || data.telegram?.ok === false) {
+        throw new Error(data?.telegram?.error || "telegram_send_failed");
+      }
+      setSent(true);
+    } catch (error) {
+      setSendError("Заявка не пішла в Telegram. Перевір /api/telegram-test і змінні Worker-а.");
     } finally {
       setSending(false);
-      setSent(true);
     }
   }
 
@@ -87,7 +105,7 @@ export default function FinalLanding() {
 
     <section className="section" id="subjects"><div className="section-head"><div className="label"><BookOpen size={16} /> Предмети</div><h2>Обери предмет</h2><p>Перші 5 питань перевіряють базу. Наступні 5 — складніші, ближче до задач, де на НМТ найчастіше гублять бали.</p></div><div className="subject-grid">{subjects.map((item, itemIndex) => <article className={item === subject ? "subject interactive-card active-subject" : "subject interactive-card"} key={item}><span>{String(itemIndex + 1).padStart(2, "0")}</span><h3>{item}</h3><p>10 питань: база + складні завдання.</p><button onClick={() => openSubject(item)}>Відкрити тест</button></article>)}</div></section>
 
-    <section className="section tests-section" id="tests"><div className="section-head"><div className="label"><Zap size={16} /> Тест</div><h2>{subject}</h2><p>Відповідай по черзі. Після кліку питання зміниться автоматично.</p></div><div className="single-quiz"><div className="quiz-progress"><span>Питання {index + 1} / {questions.length}</span><b>{score}/{questions.length}</b></div><div className="quiz-bar"><i style={{ width: `${Math.max(((answered || index + 1) / questions.length) * 100, 10)}%` }} /></div><article key={key} className={picked !== undefined ? (picked === question.answer ? "quiz-card single correct" : "quiz-card single wrong") : "quiz-card single"}><div className="quiz-top"><span>{question.level}</span>{picked !== undefined && <b>{picked === question.answer ? "+1" : "0"}</b>}</div><h3>{index + 1}. {question.prompt}</h3><div className="quiz-options">{question.options.map((option, optionIndex) => <button key={option} className={picked === optionIndex ? "picked" : ""} onClick={() => choose(optionIndex)}>{option}</button>)}</div></article><div className="quiz-actions"><button className="secondary" onClick={() => setIndex((value) => Math.max(0, value - 1))}>Назад</button><button className="primary" onClick={() => setIndex((value) => Math.min(questions.length - 1, value + 1))}>Далі</button></div>{answered === questions.length && <div className="quiz-result"><CheckCircle2 size={28} /><strong>Результат: {score}/{questions.length}</strong><div className="test-stats"><span>Правильно: <b>{score}</b></span><span>Неправильно: <b>{wrong}</b></span><span>Точність: <b>{percent}%</b></span></div><p>{recommendation}</p><button className="primary" onClick={() => scrollTo("contact")}>Записатися</button></div>}</div></section>
+    <section className="section tests-section" id="tests"><div className="section-head"><div className="label"><Zap size={16} /> Тест</div><h2>{subject}</h2><p>Відповідай по черзі. Після кліку питання зміниться автоматично.</p></div><div className="single-quiz"><div className="quiz-progress"><span>Питання {index + 1} / {questions.length}</span><b>{score}/{questions.length}</b></div><div className="quiz-bar"><i style={{ width: `${Math.max(((answered || index + 1) / questions.length) * 100, 10)}%` }} /></div>{question && <article key={key} className={picked !== undefined ? (picked === question.answer ? "quiz-card single correct" : "quiz-card single wrong") : "quiz-card single"}><div className="quiz-top"><span>{question.level}</span>{picked !== undefined && <b>{picked === question.answer ? "+1" : "0"}</b>}</div><h3>{index + 1}. {question.prompt}</h3><div className="quiz-options">{question.options.map((option, optionIndex) => <button key={option} className={picked === optionIndex ? "picked" : ""} onClick={() => choose(optionIndex)}>{option}</button>)}</div></article>}<div className="quiz-actions"><button className="secondary" onClick={() => setIndex((value) => Math.max(0, value - 1))}>Назад</button><button className="primary" onClick={() => setIndex((value) => Math.min(questions.length - 1, value + 1))}>Далі</button></div>{answered === questions.length && <div className="quiz-result"><CheckCircle2 size={28} /><strong>Результат: {score}/{questions.length}</strong><div className="test-stats"><span>Правильно: <b>{score}</b></span><span>Неправильно: <b>{wrong}</b></span><span>Точність: <b>{percent}%</b></span></div><p>{recommendation}</p><div className="quiz-actions"><button className="secondary" onClick={resetCurrentTest}>Пройти ще раз</button><button className="primary" onClick={() => scrollTo("contact")}>Записатися</button></div></div>}</div></section>
 
     <section className="section process"><div className="section-head left"><div className="label"><Target size={16} /> План</div><h2>Підготовка без хаосу</h2><p>Спочатку дивимось рівень. Потім збираємо план: теми, практика, повторення і контроль прогресу.</p></div><div className="process-grid"><article className="process-card interactive-card"><span>1</span><h3>Тест</h3><p>Учень проходить 10 питань і бачить стартовий результат.</p></article><article className="process-card interactive-card"><span>2</span><h3>Розбір</h3><p>Фіксуємо слабкі теми й не витрачаємо час на те, що вже виходить.</p></article><article className="process-card interactive-card"><span>3</span><h3>Заняття</h3><p>Працюємо в групі або індивідуально — залежно від цілі та темпу.</p></article></div></section>
 
@@ -97,7 +115,7 @@ export default function FinalLanding() {
 
     <section className="section" id="reviews"><div className="section-head"><div className="label"><Award size={16} /> Відгуки</div><h2>Що кажуть учні</h2><p>Коротко і по суті: що змінилось після підготовки.</p></div><div className="reviews">{reviews.map((review) => <article key={`${review.subject}-${review.author}`} className="interactive-card"><div>{review.rating}</div><h3>{review.subject}</h3><p>{review.text}</p><span className="review-author">{review.author}</span></article>)}</div></section>
 
-    <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Залиш заявку</h2><p>Напиши ім’я та телефон. Ми зв’яжемось і допоможемо вибрати формат занять.</p></div><form className="form" onSubmit={submit}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Скоро з вами зв’яжемось.</p><button type="button" onClick={() => setSent(false)}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." required /></label><label>Предмет<select value={subject} onChange={(event) => setSubject(event.target.value)}>{subjects.map((item) => <option key={item}>{item}</option>)}</select></label>{selectedCourse && <div className="result-pill">Обраний пакет: <b>{selectedCourse.title} — {selectedCourse.price}</b></div>}<div className="result-pill">Результат тесту: <b>{score}/{questions.length}</b></div><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></>}</form></section>
+    <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Залиш заявку</h2><p>Напиши ім’я та телефон. Предмет можна не обирати — ми уточнимо його під час дзвінка.</p></div><form className="form" onSubmit={submit}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Скоро з вами зв’яжемось.</p><button type="button" onClick={() => { setSent(false); setSendError(""); }}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Предмет <small>(необов’язково)</small><select value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)}><option value="">Не обирати зараз</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>{selectedCourse && <div className="result-pill">Обраний пакет: <b>{selectedCourse.title} — {selectedCourse.price}</b></div>}<div className="result-pill">Результат тесту: <b>{score}/{questions.length}</b></div>{sendError && <div className="form-error">{sendError}</div>}<button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></>}</form></section>
 
     <footer className="footer"><div className="logo"><span>NH</span><strong>NMT<span>Hub</span></strong></div><p>© 2026 NMTHub. Підготовка до НМТ.</p></footer>
   </main>;
