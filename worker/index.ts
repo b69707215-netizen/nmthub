@@ -83,19 +83,37 @@ async function sendTelegramToIds(env: Env, chatIdsInput: string[], text: string)
         body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
       });
       const data = await response.json().catch(() => ({}));
-      return { ok: response.ok, data };
+      return { ok: response.ok, data, chatId };
     }),
   );
 
   const delivered = results.filter((result) => result.status === "fulfilled" && result.value.ok).length;
   const failed = results.length - delivered;
-  return { ok: delivered > 0, delivered, failed, error: delivered > 0 ? null : "telegram_send_failed" };
+  const details = results.map((result) => result.status === "fulfilled" ? result.value : { ok: false, error: "request_failed" });
+  return { ok: delivered > 0, delivered, failed, error: delivered > 0 ? null : "telegram_send_failed", details };
 }
 
 async function notifyTelegram(env: Env, text: string) {
   const fixedChatIds = getRawChatIds(env);
   const subscriberChatIds = await getSubscriberChatIds(env).catch(() => []);
   return sendTelegramToIds(env, [...fixedChatIds, ...subscriberChatIds], text);
+}
+
+async function telegramTest(env: Env) {
+  const fixedChatIds = getRawChatIds(env);
+  const subscriberChatIds = await getSubscriberChatIds(env).catch(() => []);
+  const result = await sendTelegramToIds(env, [...fixedChatIds, ...subscriberChatIds], [
+    "<b>NMTHub test</b>",
+    "Якщо ви бачите це повідомлення — Telegram підключений правильно.",
+  ].join("\n"));
+
+  return Response.json({
+    ok: result.ok,
+    tokenVisibleToWorker: Boolean(env.TELEGRAM_BOT_TOKEN),
+    fixedChatIdsCount: fixedChatIds.length,
+    subscriberChatIdsCount: subscriberChatIds.length,
+    result,
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 async function sendLead(request: Request, env: Env) {
@@ -206,6 +224,7 @@ export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/lead") return sendLead(request, env);
+    if (url.pathname === "/api/telegram-test") return telegramTest(env);
     if (url.pathname === "/api/telegram") return handleTelegramWebhook(request, env);
     if (url.pathname === "/api/reviews" && request.method === "GET") return listReviews(env);
     if (url.pathname === "/api/reviews" && request.method === "POST") return createReview(request, env);
