@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS telegram_subscribers (
   username TEXT NOT NULL DEFAULT '',
   first_name TEXT NOT NULL DEFAULT '',
   last_name TEXT NOT NULL DEFAULT '',
+  phone_number TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   last_seen_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
