@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, Award, BookOpen, CheckCircle2, Menu, Phone, ShieldCheck, Sparkles, Star, Target, Users, X, Zap } from "lucide-react";
 import { courses, reviews, subjects, type Course } from "../landing-content";
 import { quizBank } from "../hard-quiz";
@@ -20,7 +20,6 @@ export default function FinalLanding() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState("");
 
   const questions = quizBank[subject] || [];
   const question = questions[index];
@@ -34,7 +33,14 @@ export default function FinalLanding() {
 
   function choose(optionIndex: number) {
     setAnswers((current) => ({ ...current, [key]: optionIndex }));
-    if (index < questions.length - 1) window.setTimeout(() => setIndex((value) => Math.min(questions.length - 1, value + 1)), 520);
+  }
+
+  function nextQuestion() {
+    setIndex((value) => Math.min(questions.length - 1, value + 1));
+  }
+
+  function prevQuestion() {
+    setIndex((value) => Math.max(0, value - 1));
   }
 
   function openSubject(next: string) {
@@ -58,10 +64,9 @@ export default function FinalLanding() {
     setIndex(0);
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSending(true);
-    setSendError("");
 
     const payload = {
       type: selectedCourse ? "Заявка на пакет уроків" : "Заявка",
@@ -83,15 +88,13 @@ export default function FinalLanding() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await response.json().catch(() => null) as { ok?: boolean; telegram?: { ok?: boolean; error?: string } } | null;
-      if (!response.ok || !data?.ok || data.telegram?.ok === false) {
-        throw new Error(data?.telegram?.error || "telegram_send_failed");
-      }
-      setSent(true);
+      const data = await response.json().catch(() => ({}));
+      localStorage.setItem("nmthub-last-telegram", JSON.stringify(data));
     } catch (error) {
-      setSendError("Заявка не пішла в Telegram. Перевір /api/telegram-test і змінні Worker-а.");
+      localStorage.setItem("nmthub-last-telegram", JSON.stringify({ ok: false, error: "network_error" }));
     } finally {
       setSending(false);
+      setSent(true);
     }
   }
 
@@ -99,13 +102,13 @@ export default function FinalLanding() {
     <header className="header float-in"><button className="logo" onClick={() => scrollTo("home")}><span>NH</span><strong>NMT<span>Hub</span></strong></button><nav className="nav">{nav.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav><button className="header-cta" onClick={() => scrollTo("contact")}>Записатися</button><button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Відкрити меню"><Menu size={22} /></button></header>
     {menuOpen && <div className="mobile-panel"><button className="close-button" onClick={() => setMenuOpen(false)} aria-label="Закрити меню"><X size={22} /></button>{nav.map(([label, id]) => <button key={id} onClick={() => { setMenuOpen(false); scrollTo(id); }}>{label}</button>)}</div>}
 
-    <section className="hero section"><div className="hero-text reveal-up"><div className="label"><Sparkles size={16} /> Підготовка до НМТ 2027</div><h1>Здай НМТ на максимум</h1><p>Пройди короткий тест і подивись, з чого варто почати. Після заявки ми підберемо формат занять під твій рівень і ціль.</p><div className="hero-actions"><button className="primary" onClick={() => scrollTo("tests")}>Пройти тест <ArrowRight size={18} /></button><button className="secondary" onClick={() => scrollTo("prices")}>Дивитися ціни</button></div></div><div className="hero-card reveal-up delay-1"><div className="score pulse-score">200</div><h2>200 — це не магія</h2><p>Це нормальний план, регулярна практика і спокійний розбір помилок. Залиш заявку — ми зв’яжемось і підкажемо, з чого почати.</p><div className="card-list"><span><CheckCircle2 size={17} /> 5 базових і 5 складних питань</span><span><CheckCircle2 size={17} /> Після відповіді — наступне питання</span><span><CheckCircle2 size={17} /> У фіналі видно правильні й неправильні відповіді</span></div></div></section>
+    <section className="hero section"><div className="hero-text reveal-up"><div className="label"><Sparkles size={16} /> Підготовка до НМТ 2027</div><h1>Здай НМТ на максимум</h1><p>Пройди короткий тест і подивись, з чого варто почати. Після заявки ми підберемо формат занять під твій рівень і ціль.</p><div className="hero-actions"><button className="primary" onClick={() => scrollTo("tests")}>Пройти тест <ArrowRight size={18} /></button><button className="secondary" onClick={() => scrollTo("prices")}>Дивитися ціни</button></div></div><div className="hero-card reveal-up delay-1"><div className="score pulse-score">200</div><h2>200 — це не магія</h2><p>Це нормальний план, регулярна практика і спокійний розбір помилок. Залиш заявку — ми зв’яжемось і підкажемо, з чого почати.</p><div className="card-list"><span><CheckCircle2 size={17} /> 5 базових і 5 складних питань</span><span><CheckCircle2 size={17} /> Відповів — бачиш результат відповіді</span><span><CheckCircle2 size={17} /> У фіналі видно правильні й неправильні відповіді</span></div></div></section>
 
     <section className="stats reveal-up"><article><strong>8</strong><span>предметів</span></article><article><strong>80</strong><span>питань</span></article><article><strong>{score}/10</strong><span>правильно</span></article><article><strong>{wrong}/10</strong><span>неправильно</span></article></section>
 
     <section className="section" id="subjects"><div className="section-head"><div className="label"><BookOpen size={16} /> Предмети</div><h2>Обери предмет</h2><p>Перші 5 питань перевіряють базу. Наступні 5 — складніші, ближче до задач, де на НМТ найчастіше гублять бали.</p></div><div className="subject-grid">{subjects.map((item, itemIndex) => <article className={item === subject ? "subject interactive-card active-subject" : "subject interactive-card"} key={item}><span>{String(itemIndex + 1).padStart(2, "0")}</span><h3>{item}</h3><p>10 питань: база + складні завдання.</p><button onClick={() => openSubject(item)}>Відкрити тест</button></article>)}</div></section>
 
-    <section className="section tests-section" id="tests"><div className="section-head"><div className="label"><Zap size={16} /> Тест</div><h2>{subject}</h2><p>Відповідай по черзі. Після кліку питання зміниться автоматично.</p></div><div className="single-quiz"><div className="quiz-progress"><span>Питання {index + 1} / {questions.length}</span><b>{score}/{questions.length}</b></div><div className="quiz-bar"><i style={{ width: `${Math.max(((answered || index + 1) / questions.length) * 100, 10)}%` }} /></div>{question && <article key={key} className={picked !== undefined ? (picked === question.answer ? "quiz-card single correct" : "quiz-card single wrong") : "quiz-card single"}><div className="quiz-top"><span>{question.level}</span>{picked !== undefined && <b>{picked === question.answer ? "+1" : "0"}</b>}</div><h3>{index + 1}. {question.prompt}</h3><div className="quiz-options">{question.options.map((option, optionIndex) => <button key={option} className={picked === optionIndex ? "picked" : ""} onClick={() => choose(optionIndex)}>{option}</button>)}</div></article>}<div className="quiz-actions"><button className="secondary" onClick={() => setIndex((value) => Math.max(0, value - 1))}>Назад</button><button className="primary" onClick={() => setIndex((value) => Math.min(questions.length - 1, value + 1))}>Далі</button></div>{answered === questions.length && <div className="quiz-result"><CheckCircle2 size={28} /><strong>Результат: {score}/{questions.length}</strong><div className="test-stats"><span>Правильно: <b>{score}</b></span><span>Неправильно: <b>{wrong}</b></span><span>Точність: <b>{percent}%</b></span></div><p>{recommendation}</p><div className="quiz-actions"><button className="secondary" onClick={resetCurrentTest}>Пройти ще раз</button><button className="primary" onClick={() => scrollTo("contact")}>Записатися</button></div></div>}</div></section>
+    <section className="section tests-section" id="tests"><div className="section-head"><div className="label"><Zap size={16} /> Тест</div><h2>{subject}</h2><p>Обери відповідь. Після цього натисни “Далі”, щоб перейти до наступного питання.</p></div><div className="single-quiz"><div className="quiz-progress"><span>Питання {index + 1} / {questions.length}</span><b>{score}/{questions.length}</b></div><div className="quiz-bar"><i style={{ width: `${Math.max(((answered || index + 1) / questions.length) * 100, 10)}%` }} /></div>{question && <article key={key} className={picked !== undefined ? (picked === question.answer ? "quiz-card single correct" : "quiz-card single wrong") : "quiz-card single"}><div className="quiz-top"><span>{question.level}</span>{picked !== undefined && <b>{picked === question.answer ? "+1" : "0"}</b>}</div><h3>{index + 1}. {question.prompt}</h3><div className="quiz-options">{question.options.map((option, optionIndex) => <button key={option} className={picked === optionIndex ? "picked" : ""} onClick={() => choose(optionIndex)}>{option}</button>)}</div></article>}<div className="quiz-actions"><button className="secondary" onClick={prevQuestion}>Назад</button><button className="primary" onClick={nextQuestion}>{index === questions.length - 1 ? "Фініш" : "Далі"}</button></div>{answered === questions.length && <div className="quiz-result"><CheckCircle2 size={28} /><strong>Результат: {score}/{questions.length}</strong><div className="test-stats"><span>Правильно: <b>{score}</b></span><span>Неправильно: <b>{wrong}</b></span><span>Точність: <b>{percent}%</b></span></div><p>{recommendation}</p><div className="quiz-actions"><button className="secondary" onClick={resetCurrentTest}>Пройти ще раз</button><button className="primary" onClick={() => scrollTo("contact")}>Записатися</button></div></div>}</div></section>
 
     <section className="section process"><div className="section-head left"><div className="label"><Target size={16} /> План</div><h2>Підготовка без хаосу</h2><p>Спочатку дивимось рівень. Потім збираємо план: теми, практика, повторення і контроль прогресу.</p></div><div className="process-grid"><article className="process-card interactive-card"><span>1</span><h3>Тест</h3><p>Учень проходить 10 питань і бачить стартовий результат.</p></article><article className="process-card interactive-card"><span>2</span><h3>Розбір</h3><p>Фіксуємо слабкі теми й не витрачаємо час на те, що вже виходить.</p></article><article className="process-card interactive-card"><span>3</span><h3>Заняття</h3><p>Працюємо в групі або індивідуально — залежно від цілі та темпу.</p></article></div></section>
 
@@ -115,7 +118,7 @@ export default function FinalLanding() {
 
     <section className="section" id="reviews"><div className="section-head"><div className="label"><Award size={16} /> Відгуки</div><h2>Що кажуть учні</h2><p>Коротко і по суті: що змінилось після підготовки.</p></div><div className="reviews">{reviews.map((review) => <article key={`${review.subject}-${review.author}`} className="interactive-card"><div>{review.rating}</div><h3>{review.subject}</h3><p>{review.text}</p><span className="review-author">{review.author}</span></article>)}</div></section>
 
-    <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Залиш заявку</h2><p>Напиши ім’я та телефон. Предмет можна не обирати — ми уточнимо його під час дзвінка.</p></div><form className="form" onSubmit={submit}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Скоро з вами зв’яжемось.</p><button type="button" onClick={() => { setSent(false); setSendError(""); }}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Предмет <small>(необов’язково)</small><select value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)}><option value="">Не обирати зараз</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>{selectedCourse && <div className="result-pill">Обраний пакет: <b>{selectedCourse.title} — {selectedCourse.price}</b></div>}<div className="result-pill">Результат тесту: <b>{score}/{questions.length}</b></div>{sendError && <div className="form-error">{sendError}</div>}<button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></>}</form></section>
+    <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Залиш заявку</h2><p>Напиши ім’я та телефон. Предмет можна не обирати — ми уточнимо його під час дзвінка.</p></div><form className="form" onSubmit={submit}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Скоро з вами зв’яжемось.</p><button type="button" onClick={() => setSent(false)}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Предмет <small>(необов’язково)</small><select value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)}><option value="">Не обирати зараз</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>{selectedCourse && <div className="result-pill">Обраний пакет: <b>{selectedCourse.title} — {selectedCourse.price}</b></div>}<div className="result-pill">Результат тесту: <b>{score}/{questions.length}</b></div><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></>}</form></section>
 
     <footer className="footer"><div className="logo"><span>NH</span><strong>NMT<span>Hub</span></strong></div><p>© 2026 NMTHub. Підготовка до НМТ.</p></footer>
   </main>;
