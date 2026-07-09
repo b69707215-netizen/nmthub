@@ -58,7 +58,7 @@ async function getSubscriberChatIds(env: Env) {
   return (data.results || []).map((row) => clean(row.chat_id, 40));
 }
 
-async function sendTelegramToIds(env: Env, chatIdsInput: string[], text: string) {
+async function sendTelegramToIds(env: Env, chatIdsInput: string[], text: string, replyMarkup?: unknown) {
   const token = clean(env.TELEGRAM_BOT_TOKEN, 220);
   const rawChatIds = unique(chatIdsInput);
   const chatIds = getValidChatIds(rawChatIds);
@@ -80,7 +80,7 @@ async function sendTelegramToIds(env: Env, chatIdsInput: string[], text: string)
       const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true, reply_markup: replyMarkup }),
       });
       const data = await response.json().catch(() => ({}));
       return { ok: response.ok, data, chatId };
@@ -121,8 +121,8 @@ async function sendLead(request: Request, env: Env) {
 
   const body = await request.json().catch(() => ({}));
   const source = body as Record<string, unknown>;
-  const name = clean(source.name, 80);
-  const phone = clean(source.phone, 80);
+  const name = clean(source.name, 80) || "Не вказано";
+  const phone = clean(source.phone, 80) || "Не вказано";
   const subject = clean(source.subject, 80) || "Не обрано";
   const score = clean(source.score, 40) || "Не проходив тест";
   const type = clean(source.type || "Заявка", 80);
@@ -131,10 +131,6 @@ async function sendLead(request: Request, env: Env) {
   const correct = clean(source.correct, 20);
   const wrong = clean(source.wrong, 20);
   const page = clean(request.headers.get("referer"), 300) || "Сайт";
-
-  if (!name || !phone) {
-    return Response.json({ ok: false, error: "name_and_phone_required" }, { status: 400 });
-  }
 
   const lines = [
     `<b>${escapeHtml(type)} NMTHub</b>`,
@@ -150,12 +146,23 @@ async function sendLead(request: Request, env: Env) {
   lines.push(`Сторінка: ${escapeHtml(page)}`);
 
   const telegram = await notifyTelegram(env, lines.join("\n"));
-
-  if (!telegram.ok) {
-    return Response.json({ ok: false, error: telegram.error || "telegram_send_failed", telegram }, { status: 502 });
-  }
-
   return Response.json({ ok: true, telegram }, { headers: { "Cache-Control": "no-store" } });
+}
+
+async function saveSubscriber(env: Env, payload: { chatId: string; username: string; firstName: string; lastName: string; phoneNumber: string }) {
+  if (!env.DB) return;
+
+  await env.DB
+    .prepare("INSERT INTO telegram_subscribers (chat_id, username, first_name, last_name, phone_number, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now')) ON CONFLICT(chat_id) DO UPDATE SET username = excluded.username, first_name = excluded.first_name, last_name = excluded.last_name, phone_number = excluded.phone_number, last_seen_at = datetime('now')")
+    .bind(payload.chatId, payload.username, payload.firstName, payload.lastName, payload.phoneNumber)
+    .run()
+    .catch(async () => {
+      await env.DB
+        ?.prepare("INSERT INTO telegram_subscribers (chat_id, username, first_name, last_name, created_at, last_seen_at) VALUES (?, ?, ?, ?, datetime('now'), datetime('now')) ON CONFLICT(chat_id) DO UPDATE SET username = excluded.username, first_name = excluded.first_name, last_name = excluded.last_name, last_seen_at = datetime('now')")
+        .bind(payload.chatId, payload.username, payload.firstName, payload.lastName)
+        .run()
+        .catch(() => undefined);
+    });
 }
 
 async function handleTelegramWebhook(request: Request, env: Env) {
@@ -165,26 +172,40 @@ async function handleTelegramWebhook(request: Request, env: Env) {
   const message = update?.message || update?.edited_message;
   const chat = message?.chat;
   const from = message?.from || {};
+  const contact = message?.contact || {};
   const text = clean(message?.text, 500);
   const chatId = clean(chat?.id, 40);
 
   if (!chatId) return Response.json({ ok: true, skipped: true });
 
-  if (env.DB) {
-    await env.DB
-      .prepare("INSERT INTO telegram_subscribers (chat_id, username, first_name, last_name, created_at, last_seen_at) VALUES (?, ?, ?, ?, datetime('now'), datetime('now')) ON CONFLICT(chat_id) DO UPDATE SET username = excluded.username, first_name = excluded.first_name, last_name = excluded.last_name, last_seen_at = datetime('now')")
-      .bind(chatId, clean(from.username, 80), clean(from.first_name, 80), clean(from.last_name, 80))
-      .run()
-      .catch(() => undefined);
+  await saveSubscriber(env, {
+    chatId,
+    username: clean(from.username, 80),
+    firstName: clean(contact.first_name || from.first_name, 80),
+    lastName: clean(contact.last_name || from.last_name, 80),
+    phoneNumber: clean(contact.phone_number, 60),
+  });
+
+  if (contact.phone_number) {
+    await sendTelegramToIds(env, [chatId], [
+      "<b>NMTHub</b>",
+      "Номер отримали. Дякуємо.",
+      `Ім'я: ${escapeHtml(contact.first_name || from.first_name || "")}`,
+      `Телефон: ${escapeHtml(contact.phone_number)}`,
+    ].join("\n"), { remove_keyboard: true });
+    return Response.json({ ok: true, contactSaved: true });
   }
 
   if (text.startsWith("/start")) {
     await sendTelegramToIds(env, [chatId], [
       "<b>NMTHub</b>",
       "Ви підключені до сповіщень.",
-      "Тепер сюди приходитимуть заявки з сайту.",
-      "Сайт: https://add.nmthub.online/",
-    ].join("\n"));
+      "Щоб ми бачили ваш номер у боті, натисніть кнопку нижче.",
+    ].join("\n"), {
+      keyboard: [[{ text: "📱 Поділитися номером", request_contact: true }]],
+      resize_keyboard: true,
+      one_time_keyboard: true,
+    });
   }
 
   return Response.json({ ok: true });
