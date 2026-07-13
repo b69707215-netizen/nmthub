@@ -1,0 +1,19 @@
+{
+  "name": "NMTHub — підготовка до НМТ",
+  "short_name": "NMTHub",
+  "description": "Онлайн-підготовка до НМТ: тести, пробний урок і план підготовки.",
+  "lang": "uk-UA",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07070d",
+  "theme_color": "#07070d",
+  "icons": [
+    {
+      "src": "/nmthub-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

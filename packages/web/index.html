@@ -3,6 +3,13 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="robots" content="index, follow, max-image-preview:large" />
+		<meta name="theme-color" content="#07070d" />
+		<link rel="canonical" href="https://nmthub.online/" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="preconnect" href="https://www.googletagmanager.com" />
+		<link rel="dns-prefetch" href="https://www.google-analytics.com" />
 		<!-- Google Tag Manager -->
 		<script>
 			(function (w, d, s, l, i) {
@@ -20,15 +27,55 @@
 		<link rel="icon" type="image/png" sizes="512x512" href="/nmthub-icon.png" />
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link rel="apple-touch-icon" href="/nmthub-icon.png" />
-		<title>NMTHub — підготовка до НМТ</title>
-		<meta name="description" content="NMTHub підготовка до НМТ: тести по предметах, пробні завдання та запис на заняття онлайн." />
+		<link rel="manifest" href="/site.webmanifest" />
+		<title>NMTHub — підготовка до НМТ онлайн</title>
+		<meta name="description" content="NMTHub: онлайн-підготовка до НМТ з української, математики, історії та інших предметів. Пройди тест, запишись на пробний урок і отримай план підготовки." />
 		<meta property="og:title" content="NMTHub — підготовка до НМТ" />
-		<meta property="og:description" content="NMTHub підготовка до НМТ: тести по предметах, пробні завдання та запис на заняття онлайн." />
+		<meta property="og:description" content="Онлайн-підготовка до НМТ: тести, пробний урок і план підготовки під твій рівень." />
 		<meta property="og:url" content="https://nmthub.online/" />
 		<meta property="og:type" content="website" />
-		<meta name="twitter:card" content="summary" />
-		<meta name="twitter:title" content="NMTHub — підготовка до НМТ" />
-		<meta name="twitter:description" content="NMTHub підготовка до НМТ: тести по предметах, пробні завдання та запис на заняття онлайн." />
+		<meta property="og:site_name" content="NMTHub" />
+		<meta property="og:locale" content="uk_UA" />
+		<meta property="og:image" content="https://nmthub.online/og-image.jpg" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="NMTHub — підготовка до НМТ онлайн" />
+		<meta name="twitter:description" content="Пройди тест, запишись на пробний урок і отримай план підготовки до НМТ." />
+		<meta name="twitter:image" content="https://nmthub.online/og-image.jpg" />
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@graph": [
+					{
+						"@type": "EducationalOrganization",
+						"@id": "https://nmthub.online/#organization",
+						"name": "NMTHub",
+						"url": "https://nmthub.online/",
+						"logo": "https://nmthub.online/nmthub-icon.png",
+						"description": "Онлайн-підготовка до НМТ з тестами, пробним уроком і планом підготовки під рівень учня.",
+						"sameAs": []
+					},
+					{
+						"@type": "WebSite",
+						"@id": "https://nmthub.online/#website",
+						"url": "https://nmthub.online/",
+						"name": "NMTHub",
+						"inLanguage": "uk-UA",
+						"publisher": { "@id": "https://nmthub.online/#organization" }
+					},
+					{
+						"@type": "Course",
+						"@id": "https://nmthub.online/#nmt-course",
+						"name": "Підготовка до НМТ онлайн",
+						"description": "Курс підготовки до НМТ з тестами, практикою, пробним уроком і контролем прогресу.",
+						"provider": { "@id": "https://nmthub.online/#organization" },
+						"inLanguage": "uk-UA",
+						"educationalLevel": "secondary education"
+					}
+				]
+			}
+		</script>
 	</head>
 	<body>
 		<!-- Google Tag Manager (noscript) -->
