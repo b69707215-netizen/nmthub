@@ -46,6 +46,15 @@ packages/
 
 Secrets and credentials live in `.env` at the project root (gitignored). Vite's `loadEnv` loads them into `process.env` at dev/build time (configured in `packages/web/vite.config.ts`). In API code (Hono), use `process.env.YOUR_VAR`. In browser code, only `VITE_`-prefixed vars are exposed via `import.meta.env.VITE_YOUR_VAR`. Drizzle scripts use `bun --env-file=../../.env` to load env vars directly.
 
+For production Cloudflare Pages/Workers lead notifications, set these runtime variables:
+
+```sh
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=5510735951
+```
+
+Use `TELEGRAM_CHAT_IDS=5510735951,123456789` instead when several admin chats should receive every lead. The bot must be opened by each recipient at least once before Telegram allows direct messages to that chat.
+
 ## Desktop UI
 
 The desktop app has no separate renderer by default. It loads the web app from `packages/web`; desktop-specific UI should live in `packages/web/src/web/` and be gated with `useDesktop()` / `window.electronAPI`. Keep `packages/desktop` for Electron window setup, menus/tray/shortcuts, IPC handlers, native OS APIs, and packaging. Only add a separate desktop renderer when the product intentionally needs a different desktop-only UI architecture.
