@@ -28,10 +28,12 @@ async function tgSend(chatId: string, text: string) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
     });
+
     if (!res.ok) {
       console.error("tg send error", await res.text());
       return false;
     }
+
     return true;
   } catch (e) {
     console.error("tg send error", e);
