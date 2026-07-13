@@ -138,9 +138,10 @@
     rgba(255, 255, 255, 0.065);
 }
 
-.footer .logo-image img {
-  width: 174px;
-  max-height: 56px;
+.footer .logo-image .logo-mark {
+  width: 46px;
+  height: 46px;
+  max-height: none;
 }
 
 .float-in { animation: floatIn 0.72s ease both; }
