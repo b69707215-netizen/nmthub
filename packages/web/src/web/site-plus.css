@@ -319,5 +319,5 @@
 @keyframes questionPop { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @media (max-width: 1180px) { .rich-prices { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
-@media (max-width: 680px) { .orb { width: 240px; height: 240px; } .shape { opacity: 0.34; transform: scale(0.82); } .shape-score, .shape-topic, .shape-date { display: none; } .rich-prices { grid-template-columns: 1fr !important; } .quiz-card, .quiz-card.single { min-height: auto; border-radius: 22px; padding: 20px; } .quiz-card.single h3 { font-size: 1.35rem; } .quiz-actions { flex-direction: column; } .quiz-actions button { width: 100%; } .test-stats { grid-template-columns: 1fr; } }
+@media (max-width: 680px) { .orb, .nmt-shapes { display: none; } .rich-prices { grid-template-columns: 1fr !important; } .quiz-card, .quiz-card.single { min-height: auto; border-radius: 22px; padding: 20px; } .quiz-card.single h3 { font-size: 1.35rem; } .quiz-actions { flex-direction: column; } .quiz-actions button { width: 100%; } .test-stats { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .orb, .shape, .float-in, .reveal-up, .pulse-score { animation: none !important; } .primary::after, .price button::after, .success button::after { display: none; } }
