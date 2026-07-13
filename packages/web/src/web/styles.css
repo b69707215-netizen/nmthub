@@ -37,6 +37,19 @@ body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.82), transparent 86%);
+}
+
 button,
 input,
 select {
@@ -107,7 +120,7 @@ select:focus-visible {
 .logo strong {
   font-size: 1.08rem;
   font-weight: 900;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .logo strong span {
@@ -221,16 +234,16 @@ select:focus-visible {
 .contact h2 {
   margin: 18px 0;
   max-width: 780px;
-  font-size: clamp(2.7rem, 7.6vw, 6.7rem);
-  line-height: 0.96;
-  letter-spacing: -0.065em;
+  font-size: 5.4rem;
+  line-height: 1;
+  letter-spacing: 0;
   font-weight: 900;
 }
 
 .section-head h2,
 .process h2,
 .contact h2 {
-  font-size: clamp(2.15rem, 5vw, 4.2rem);
+  font-size: 3.4rem;
 }
 
 .hero p,
@@ -348,7 +361,7 @@ select:focus-visible {
 .success h3 {
   margin: 0 0 12px;
   font-size: 1.45rem;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
 }
 
 .hero-card p,
@@ -399,7 +412,7 @@ select:focus-visible {
 .stats strong {
   display: block;
   color: var(--gold-light);
-  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-size: 2.5rem;
   line-height: 1;
 }
 
@@ -601,6 +614,108 @@ select:focus-visible {
   color: var(--muted);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(245, 197, 66, 0.12), transparent 34%),
+    rgba(4, 4, 8, 0.76);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: modalBackdropIn 0.24s ease both;
+}
+
+.lead-modal {
+  position: relative;
+  overflow: hidden;
+  width: min(560px, 100%);
+  border: 1px solid rgba(245, 197, 66, 0.42);
+  border-radius: 30px;
+  padding: 28px;
+  background:
+    linear-gradient(145deg, rgba(245, 197, 66, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(18, 18, 30, 0.99), rgba(9, 9, 17, 0.99));
+  box-shadow: 0 32px 130px rgba(0, 0, 0, 0.56), 0 0 70px rgba(245, 197, 66, 0.12);
+  animation: modalCardIn 0.28s cubic-bezier(.2, .9, .25, 1.12) both;
+}
+
+.lead-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.12) 42%, transparent 58%);
+  transform: translateX(-120%);
+  animation: modalShine 2.8s ease 0.35s infinite;
+}
+
+.lead-modal__head {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.lead-modal__head h2 {
+  margin: 0;
+  padding-right: 48px;
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.lead-modal__head p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-form {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal-form input[readonly] {
+  color: var(--muted);
+}
+
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalShine {
+  0%, 42% { transform: translateX(-120%); opacity: 0; }
+  52% { opacity: 1; }
+  68%, 100% { transform: translateX(120%); opacity: 0; }
+}
+
 @media (max-width: 1020px) {
   .nav,
   .header-cta {
@@ -649,7 +764,7 @@ select:focus-visible {
   }
 
   .hero h1 {
-    font-size: clamp(2.55rem, 14vw, 4.4rem);
+    font-size: 3.55rem;
   }
 
   .hero-actions,
@@ -723,5 +838,9 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .lead-modal::before {
+    display: none;
   }
 }

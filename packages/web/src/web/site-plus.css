@@ -21,7 +21,7 @@
 .interactive-card {
   position: relative;
   overflow: hidden;
-  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  transition: transform 0.24s ease, border-color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
 }
 
 .interactive-card::after {
@@ -36,10 +36,10 @@
 
 .interactive-card:hover,
 .active-subject {
-  transform: translateY(-6px);
+  transform: translateY(-7px);
   border-color: rgba(245, 197, 66, 0.48) !important;
   background: linear-gradient(180deg, rgba(245, 197, 66, 0.13), rgba(255, 255, 255, 0.07)) !important;
-  box-shadow: 0 28px 90px rgba(245, 197, 66, 0.14);
+  box-shadow: 0 32px 94px rgba(245, 197, 66, 0.16), 0 18px 50px rgba(0, 0, 0, 0.28);
 }
 
 .interactive-card:hover::after,
@@ -81,7 +81,7 @@
 
 .single-quiz { max-width: 760px; margin: 0 auto; }
 .quiz-card.single { min-height: 360px; padding: 28px; animation: questionPop .28s ease both; }
-.quiz-card.single h3 { font-size: clamp(1.35rem, 3vw, 2rem); }
+.quiz-card.single h3 { font-size: 1.65rem; }
 .quiz-card.single .quiz-options { margin-top: 10px; }
 .quiz-card.single .quiz-options button { min-height: 54px; font-weight: 800; }
 .quiz-progress, .quiz-actions, .quiz-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
@@ -99,10 +99,81 @@
 
 .result-pill { width: 100%; display: flex; justify-content: space-between; padding: 12px 14px; border: 1px solid rgba(245, 197, 66, 0.22); }
 .rich-prices { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-.price { overflow: hidden; }
-.price::before { content: ""; position: absolute; inset: 0; opacity: 0; background: linear-gradient(135deg, rgba(245,197,66,.16), transparent 45%); transition: opacity .25s ease; }
-.price:hover::before, .price.featured::before { opacity: 1; }
+.price {
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.price::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    linear-gradient(135deg, rgba(245,197,66,.18), transparent 43%),
+    linear-gradient(180deg, rgba(255,255,255,.08), transparent 55%);
+  transition: opacity .28s ease;
+}
+
+.price::after {
+  content: "";
+  position: absolute;
+  inset: auto -30% -42% -30%;
+  height: 140px;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(245, 197, 66, 0.24), transparent 68%);
+  transition: opacity .28s ease, transform .28s ease;
+  pointer-events: none;
+}
+
+.price:hover {
+  transform: translateY(-8px);
+  border-color: rgba(245, 197, 66, 0.54);
+  box-shadow: 0 34px 110px rgba(245, 197, 66, 0.16), 0 20px 60px rgba(0, 0, 0, 0.32);
+}
+
+.price:hover::before,
+.price.featured::before,
+.price:hover::after,
+.price.featured::after {
+  opacity: 1;
+}
+
 .price strong { text-shadow: 0 0 28px rgba(245, 197, 66, 0.35); }
+.price h3,
+.price p,
+.price strong,
+.price ul,
+.price button,
+.popular {
+  position: relative;
+  z-index: 1;
+}
+
+.primary,
+.price button,
+.success button {
+  position: relative;
+  overflow: hidden;
+}
+
+.primary::after,
+.price button::after,
+.success button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.42) 48%, transparent 62%);
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+}
+
+.primary:hover::after,
+.price button:hover::after,
+.success button:hover::after {
+  transform: translateX(120%);
+}
+
 .form button:disabled { opacity: 0.7; cursor: wait; }
 .form-error { border: 1px solid rgba(255, 91, 91, 0.34); border-radius: 16px; padding: 12px 14px; background: rgba(255, 91, 91, 0.1); color: #ffb9b9; font-weight: 800; line-height: 1.4; }
 .contact-link { display: none !important; }
@@ -115,5 +186,5 @@
 @keyframes questionPop { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @media (max-width: 1180px) { .rich-prices { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
-@media (max-width: 680px) { .orb { width: 240px; height: 240px; } .rich-prices { grid-template-columns: 1fr !important; } .quiz-card, .quiz-card.single { min-height: auto; border-radius: 22px; padding: 20px; } .quiz-actions { flex-direction: column; } .quiz-actions button { width: 100%; } .test-stats { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .orb, .float-in, .reveal-up, .pulse-score { animation: none !important; } }
+@media (max-width: 680px) { .orb { width: 240px; height: 240px; } .rich-prices { grid-template-columns: 1fr !important; } .quiz-card, .quiz-card.single { min-height: auto; border-radius: 22px; padding: 20px; } .quiz-card.single h3 { font-size: 1.35rem; } .quiz-actions { flex-direction: column; } .quiz-actions button { width: 100%; } .test-stats { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .orb, .float-in, .reveal-up, .pulse-score { animation: none !important; } .primary::after, .price button::after, .success button::after { display: none; } }

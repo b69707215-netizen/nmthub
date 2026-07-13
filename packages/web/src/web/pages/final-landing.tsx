@@ -13,6 +13,7 @@ export default function FinalLanding() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [subject, setSubject] = useState(subjects[0]);
   const [leadSubject, setLeadSubject] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [name, setName] = useState("");
@@ -52,7 +53,13 @@ export default function FinalLanding() {
 
   function chooseCourse(course: Course) {
     setSelectedCourse(course);
-    scrollTo("contact");
+    setLeadSubject(subjects[0]);
+    setSent(false);
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
   }
 
   function resetCurrentTest() {
@@ -66,6 +73,7 @@ export default function FinalLanding() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!leadSubject.trim()) return;
     setSending(true);
 
     const payload = {
@@ -95,12 +103,14 @@ export default function FinalLanding() {
     } finally {
       setSending(false);
       setSent(true);
+      setModalOpen(false);
     }
   }
 
   return <main className="site" id="home"><div className="orb orb-a" /><div className="orb orb-b" />
     <header className="header float-in"><button className="logo" onClick={() => scrollTo("home")}><span>NH</span><strong>NMT<span>Hub</span></strong></button><nav className="nav">{nav.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav><button className="header-cta" onClick={() => scrollTo("contact")}>Записатися</button><button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Відкрити меню"><Menu size={22} /></button></header>
     {menuOpen && <div className="mobile-panel"><button className="close-button" onClick={() => setMenuOpen(false)} aria-label="Закрити меню"><X size={22} /></button>{nav.map(([label, id]) => <button key={id} onClick={() => { setMenuOpen(false); scrollTo(id); }}>{label}</button>)}</div>}
+    {modalOpen && <div className="modal-backdrop" role="presentation" onClick={closeModal}><div className="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={closeModal} aria-label="Закрити форму"><X size={20} /></button><div className="lead-modal__head"><div className="label"><Sparkles size={16} /> Заявка</div><h2 id="lead-modal-title">Оформити заявку</h2><p>Оберіть пакет і обов'язково вкажіть урок, щоб заявка пішла одразу без уточнень.</p></div><form className="form modal-form" onSubmit={submit}><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Пакет<input value={selectedCourse ? `${selectedCourse.title} — ${selectedCourse.price}` : ""} readOnly /></label><label>Урок <small>(обов'язково)</small><select value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)} required><option value="">Оберіть урок</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></form></div></div>}
 
     <section className="hero section"><div className="hero-text reveal-up"><div className="label"><Sparkles size={16} /> Підготовка до НМТ 2027</div><h1>Здай НМТ на максимум</h1><p>Пройди короткий тест і подивись, з чого варто почати. Після заявки ми підберемо формат занять під твій рівень і ціль.</p><div className="hero-actions"><button className="primary" onClick={() => scrollTo("tests")}>Пройти тест <ArrowRight size={18} /></button><button className="secondary" onClick={() => scrollTo("prices")}>Дивитися ціни</button></div></div><div className="hero-card reveal-up delay-1"><div className="score pulse-score">200</div><h2>200 — це не магія</h2><p>Це нормальний план, регулярна практика і спокійний розбір помилок. Залиш заявку — ми зв’яжемось і підкажемо, з чого почати.</p><div className="card-list"><span><CheckCircle2 size={17} /> 5 базових і 5 складних питань</span><span><CheckCircle2 size={17} /> Відповів — бачиш результат відповіді</span><span><CheckCircle2 size={17} /> У фіналі видно правильні й неправильні відповіді</span></div></div></section>
 
