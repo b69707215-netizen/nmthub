@@ -1,7 +1,8 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Award, BookOpen, CheckCircle2, Menu, Phone, ShieldCheck, Sparkles, Star, Target, Users, X, Zap } from "lucide-react";
 import { courses, reviews, subjects, type Course } from "../landing-content";
 import { quizBank } from "../hard-quiz";
+import { trackEvent } from "../analytics";
 
 const nav = [["Головна", "home"], ["Предмети", "subjects"], ["Тест", "tests"], ["Ціни", "prices"], ["Відгуки", "reviews"], ["Заявка", "contact"]];
 
@@ -21,8 +22,9 @@ export default function FinalLanding() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const autoAdvanceTimer = useRef<number | null>(null);
 
-  const questions = quizBank[subject] || [];
+  const questions = useMemo(() => quizBank[subject] || [], [subject]);
   const question = questions[index];
   const key = `${subject}-${index}`;
   const picked = answers[key];
@@ -32,37 +34,68 @@ export default function FinalLanding() {
   const percent = questions.length ? Math.round((score / questions.length) * 100) : 0;
   const recommendation = score >= 8 ? "База сильна. Далі варто добити складні теми й тренувати швидкість." : score >= 5 ? "Старт нормальний. Потрібно підтягнути слабкі теми й більше практикувати типові завдання." : "Краще почати з основ. Так буде спокійніше й без хаосу перед НМТ.";
 
+  function clearAutoAdvance() {
+    if (autoAdvanceTimer.current === null) return;
+    window.clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = null;
+  }
+
   function choose(optionIndex: number) {
     if (picked !== undefined) return;
     setAnswers((current) => ({ ...current, [key]: optionIndex }));
 
+    const correct = question?.answer === optionIndex;
+    const nextScore = score + (correct ? 1 : 0);
+    trackEvent("quiz_answer", {
+      subject,
+      question_index: index + 1,
+      question_total: questions.length,
+      correct,
+    });
+
     if (index < questions.length - 1) {
-      window.setTimeout(() => {
+      clearAutoAdvance();
+      autoAdvanceTimer.current = window.setTimeout(() => {
+        autoAdvanceTimer.current = null;
         setIndex((current) => (current === index ? current + 1 : current));
       }, 650);
+      return;
     }
+
+    trackEvent("quiz_complete", {
+      subject,
+      score: nextScore,
+      total: questions.length,
+      percent: questions.length ? Math.round((nextScore / questions.length) * 100) : 0,
+    });
   }
 
   function nextQuestion() {
+    clearAutoAdvance();
     setIndex((value) => Math.min(questions.length - 1, value + 1));
   }
 
   function prevQuestion() {
+    clearAutoAdvance();
     setIndex((value) => Math.max(0, value - 1));
   }
 
   function openSubject(next: string) {
+    clearAutoAdvance();
     setSubject(next);
     setLeadSubject(next);
     setIndex(0);
+    trackEvent("subject_open", { subject: next });
     scrollTo("tests");
   }
 
   function chooseCourse(course: Course) {
+    clearAutoAdvance();
     setSelectedCourse(course);
     setLeadSubject(subjects[0]);
     setSent(false);
     setModalOpen(true);
+    trackEvent("trial_modal_open", { course: course.title });
   }
 
   function closeModal() {
@@ -70,6 +103,7 @@ export default function FinalLanding() {
   }
 
   function resetCurrentTest() {
+    clearAutoAdvance();
     setAnswers((current) => {
       const next = { ...current };
       questions.forEach((_, itemIndex) => delete next[`${subject}-${itemIndex}`]);
@@ -96,6 +130,11 @@ export default function FinalLanding() {
     };
 
     localStorage.setItem("nmthub-lead", JSON.stringify({ ...payload, createdAt: new Date().toISOString() }));
+    trackEvent("lead_submit", {
+      type: payload.type,
+      subject: payload.subject,
+      score: payload.score,
+    });
 
     try {
       const response = await fetch("/api/lead", {
@@ -105,8 +144,16 @@ export default function FinalLanding() {
       });
       const data = await response.json().catch(() => ({}));
       localStorage.setItem("nmthub-last-telegram", JSON.stringify(data));
-    } catch (error) {
+      trackEvent("lead_submit_result", {
+        ok: Boolean(data.ok),
+        type: payload.type,
+      });
+    } catch {
       localStorage.setItem("nmthub-last-telegram", JSON.stringify({ ok: false, error: "network_error" }));
+      trackEvent("lead_submit_result", {
+        ok: false,
+        type: payload.type,
+      });
     } finally {
       setSending(false);
       setSent(true);
@@ -115,9 +162,9 @@ export default function FinalLanding() {
   }
 
   return <main className="site" id="home"><div className="orb orb-a" /><div className="orb orb-b" /><div className="nmt-shapes" aria-hidden="true"><span className="shape shape-score">200</span><span className="shape shape-formula">x²</span><span className="shape shape-topic">НМТ</span><span className="shape shape-chem">H₂O</span><span className="shape shape-date">1648</span></div>
-    <header className="header float-in"><button className="logo logo-image" onClick={() => scrollTo("home")}><img className="logo-mark" src="/nmthub-icon.png" alt="" /><span className="logo-word">NMTHub</span></button><nav className="nav">{nav.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav><button className="header-cta" onClick={() => scrollTo("contact")}>Записатися</button><button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Відкрити меню"><Menu size={22} /></button></header>
+    <header className="header float-in"><button className="logo logo-image" onClick={() => scrollTo("home")} aria-label="NMTHub головна"><img className="logo-mark" src="/nmthub-icon.png" alt="" /><span className="logo-word">NMTHub</span></button><nav className="nav">{nav.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav><button className="header-cta" onClick={() => scrollTo("contact")}>Записатися</button><button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Відкрити меню"><Menu size={22} /></button></header>
     {menuOpen && <div className="mobile-panel"><button className="close-button" onClick={() => setMenuOpen(false)} aria-label="Закрити меню"><X size={22} /></button>{nav.map(([label, id]) => <button key={id} onClick={() => { setMenuOpen(false); scrollTo(id); }}>{label}</button>)}</div>}
-    {modalOpen && <div className="modal-backdrop" role="presentation" onClick={closeModal}><div className="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={closeModal} aria-label="Закрити форму"><X size={20} /></button><div className="lead-modal__head"><div className="label"><Sparkles size={16} /> Пробний урок</div><h2 id="lead-modal-title">Заявка на пробний урок</h2><p>Залиш контакти й обери урок. Ми зв’яжемось, покажемо формат підготовки та підберемо план після пробного заняття.</p></div><form className="form modal-form" onSubmit={submit}><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Урок <small>(обов'язково)</small><select value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)} required><option value="">Оберіть урок</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></form></div></div>}
+    {modalOpen && <div className="modal-backdrop"><dialog className="lead-modal" open aria-labelledby="lead-modal-title" onCancel={closeModal}><button className="modal-close" onClick={closeModal} aria-label="Закрити форму"><X size={20} /></button><div className="lead-modal__head"><div className="label"><Sparkles size={16} /> Пробний урок</div><h2 id="lead-modal-title">Заявка на пробний урок</h2><p>Залиш контакти й обери урок. Ми зв’яжемось, покажемо формат підготовки та підберемо план після пробного заняття.</p></div><form className="form modal-form" onSubmit={submit}><label>Ім'я<input aria-label="Ім'я" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input aria-label="Телефон" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Урок <small>(обов'язково)</small><select aria-label="Урок" value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)} required><option value="">Оберіть урок</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></form></dialog></div>}
 
     <section className="hero section"><div className="hero-text reveal-up"><img className="hero-logo-mark" src="/nmthub-logo.png" alt="NMTHub" /><div className="label"><Sparkles size={16} /> Підготовка до НМТ 2027</div><h1>Здай НМТ на максимум</h1><p>Пройди короткий тест і подивись, з чого варто почати. Після заявки ми підберемо формат занять під твій рівень і ціль.</p><div className="hero-actions"><button className="primary" onClick={() => scrollTo("tests")}>Пройти тест <ArrowRight size={18} /></button><button className="secondary" onClick={() => scrollTo("prices")}>Дивитися ціни</button></div></div><div className="hero-card reveal-up delay-1"><div className="score pulse-score">200</div><h2>200 — це не магія</h2><p>Це нормальний план, регулярна практика і спокійний розбір помилок. Залиш заявку — ми зв’яжемось і підкажемо, з чого почати.</p><div className="card-list"><span><CheckCircle2 size={17} /> 5 базових і 5 складних питань</span><span><CheckCircle2 size={17} /> Відповів — бачиш результат відповіді</span><span><CheckCircle2 size={17} /> У фіналі видно правильні й неправильні відповіді</span></div></div></section>
 
@@ -135,7 +182,7 @@ export default function FinalLanding() {
 
     <section className="section" id="reviews"><div className="section-head"><div className="label"><Award size={16} /> Відгуки</div><h2>Що кажуть учні</h2><p>Коротко і по суті: що змінилось після підготовки.</p></div><div className="reviews">{reviews.map((review) => <article key={`${review.subject}-${review.author}`} className="interactive-card"><div>{review.rating}</div><h3>{review.subject}</h3><p>{review.text}</p><span className="review-author">{review.author}</span></article>)}</div></section>
 
-    <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Залиш заявку</h2><p>Напиши ім’я та телефон. Предмет можна не обирати — ми уточнимо його під час дзвінка.</p></div><form className="form" onSubmit={submit}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Скоро з вами зв’яжемось.</p><button type="button" onClick={() => setSent(false)}>Ще раз</button></div> : <><label>Ім'я<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Предмет <small>(необов’язково)</small><select value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)}><option value="">Не обирати зараз</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><div className="result-pill">Результат тесту: <b>{score}/{questions.length}</b></div><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></>}</form></section>
+    <section className="section contact" id="contact"><div><div className="label"><Phone size={16} /> Заявка</div><h2>Залиш заявку</h2><p>Напиши ім’я та телефон. Предмет можна не обирати — ми уточнимо його під час дзвінка.</p></div><form className="form" onSubmit={submit}>{sent ? <div className="success"><CheckCircle2 size={42} /><h3>Заявку прийнято</h3><p>Скоро з вами зв’яжемось.</p><button type="button" onClick={() => setSent(false)}>Ще раз</button></div> : <><label>Ім'я<input aria-label="Ім'я" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ваше ім'я" required /></label><label>Телефон<input aria-label="Телефон" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+380..." type="tel" required /></label><label>Предмет <small>(необов’язково)</small><select aria-label="Предмет" value={leadSubject} onChange={(event) => setLeadSubject(event.target.value)}><option value="">Не обирати зараз</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><div className="result-pill">Результат тесту: <b>{score}/{questions.length}</b></div><button className="primary" type="submit" disabled={sending}>{sending ? "Надсилаємо..." : "Надіслати заявку"} <ArrowRight size={18} /></button></>}</form></section>
 
     <footer className="footer"><div className="logo logo-image"><img className="logo-mark" src="/nmthub-icon.png" alt="" /><span className="logo-word">NMTHub</span></div><p>© 2026 NMTHub. Підготовка до НМТ.</p></footer>
   </main>;
