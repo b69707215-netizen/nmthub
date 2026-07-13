@@ -7,8 +7,9 @@
   ],
   "scripts": {
     "dev": "cd packages/web && bunx vite",
-    "build": "cd packages/web && bunx vite build",
+    "build": "bun run build:web && bun run prepare:pages",
     "build:web": "cd packages/web && bunx vite build",
+    "prepare:pages": "node -e \"const fs=require('node:fs'); fs.rmSync('.output/public',{recursive:true,force:true}); fs.mkdirSync('.output',{recursive:true}); fs.cpSync('packages/web/dist','.output/public',{recursive:true});\"",
     "deploy": "bun run build && npx wrangler deploy --config wrangler.toml",
     "preview": "cd packages/web && bunx vite preview"
   },
